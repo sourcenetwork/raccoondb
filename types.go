@@ -37,8 +37,13 @@ type NodeKeyer[T any] interface {
     // Return the lowest possible key
     MinKey() []byte
 
-    // Return the lowest possible key
+    // Return the highest possible key
     MaxKey() []byte
+}
+
+// Return a unique key (id) for the given object
+type Ider[T any] interface {
+    Id(T) []byte
 }
 
 

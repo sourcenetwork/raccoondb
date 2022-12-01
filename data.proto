@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package raccoon;
+
+option go_package = "github.com/sourcenetwork/raccoon";
+
+message Data {
+    string data = 1;
+}

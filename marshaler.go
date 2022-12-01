@@ -1,14 +1,23 @@
 package raccoon
 
 import (
-    "google.golang.org/protobuf/proto"
     "encoding/json"
+
+    "google.golang.org/protobuf/proto"
 )
 
 // Marshaler implementation for protobuff objects
-type Proto[T proto.Message] struct {}
+type protoMarshaler[T proto.Message] struct {
+    factory func() T
+}
 
-func (m *Proto[T]) Marshal(obj T) ([]byte, error) {
+func ProtoMarshaler[T proto.Message](factory func() T) Marshaler[T]{
+    return &protoMarshaler[T] {
+        factory: factory,
+    }
+}
+
+func (m *protoMarshaler[T]) Marshal(obj T) ([]byte, error) {
     bytes, err := proto.Marshal(obj)
     if err != nil {
         return nil, err
@@ -16,8 +25,9 @@ func (m *Proto[T]) Marshal(obj T) ([]byte, error) {
     return bytes, nil
 }
 
-func (m *Proto[T]) Unmarshal(bytes []byte) (T, error) {
-    var obj T
+func (m *protoMarshaler[T]) Unmarshal(bytes []byte) (T, error) {
+    obj := m.factory()
+    
     err := proto.Unmarshal(bytes, obj)
     if err != nil {
         return obj, err
@@ -46,5 +56,5 @@ func (m *Json[T]) Unmarshal(bytes []byte) (T, error) {
     return obj, nil
 }
 
-var _ Marshaler[proto.Message] = (*Proto[proto.Message])(nil)
+var _ Marshaler[proto.Message] = (*protoMarshaler[proto.Message])(nil)
 var _ Marshaler[any] = (*Json[any])(nil)
