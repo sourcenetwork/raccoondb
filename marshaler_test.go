@@ -12,7 +12,7 @@ func TestProtoMarshaler(t *testing.T) {
         Data: "abc",
     }
 
-    m := ProtoMarshaler[*Data](func () *Data {return &Data{}})
+    m := ProtoMarshaler[Data, *Data]{}
 
     bytes, err := m.Marshal(&d)
     assert.Nil(t, err)

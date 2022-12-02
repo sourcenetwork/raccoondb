@@ -6,18 +6,16 @@ import (
     "google.golang.org/protobuf/proto"
 )
 
+type ProtoConstraint[T any] interface {
+    proto.Message
+    *T
+}
+
 // Marshaler implementation for protobuff objects
-type protoMarshaler[T proto.Message] struct {
-    factory func() T
-}
+type ProtoMarshaler[T any, PT ProtoConstraint[T]] struct {}
 
-func ProtoMarshaler[T proto.Message](factory func() T) Marshaler[T]{
-    return &protoMarshaler[T] {
-        factory: factory,
-    }
-}
 
-func (m *protoMarshaler[T]) Marshal(obj T) ([]byte, error) {
+func (m *ProtoMarshaler[T, PT]) Marshal(obj PT) ([]byte, error) {
     bytes, err := proto.Marshal(obj)
     if err != nil {
         return nil, err
@@ -25,10 +23,11 @@ func (m *protoMarshaler[T]) Marshal(obj T) ([]byte, error) {
     return bytes, nil
 }
 
-func (m *protoMarshaler[T]) Unmarshal(bytes []byte) (T, error) {
-    obj := m.factory()
+func (m *ProtoMarshaler[T, PT]) Unmarshal(bytes []byte) (T, error) {
+    var obj T
+    p := PT(&obj)
     
-    err := proto.Unmarshal(bytes, obj)
+    err := proto.Unmarshal(bytes, p)
     if err != nil {
         return obj, err
     }
@@ -39,7 +38,7 @@ func (m *protoMarshaler[T]) Unmarshal(bytes []byte) (T, error) {
 // Marshaler to represent objects as Json
 type Json[T any] struct {}
 
-func (m *Json[T]) Marshal(obj T) ([]byte, error) {
+func (m *Json[T]) Marshal(obj *T) ([]byte, error) {
     bytes, err := json.Marshal(obj)
     if err != nil {
         return nil, err
@@ -56,5 +55,5 @@ func (m *Json[T]) Unmarshal(bytes []byte) (T, error) {
     return obj, nil
 }
 
-var _ Marshaler[proto.Message] = (*protoMarshaler[proto.Message])(nil)
+//var _ Marshaler[Data, *Data] = (*ProtoMarshaler[Data, *Data])(nil)
 var _ Marshaler[any] = (*Json[any])(nil)

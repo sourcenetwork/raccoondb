@@ -35,7 +35,7 @@ func NewSecondaryIdxStore[Edg Edge[N], N any](store types.KVStore, prefix []byte
 }
 
 func (s *SecondaryIndexStore[Edg, N]) Set(edg Edg) error {
-    bytes, err := s.marshaler.Marshal(edg)
+    bytes, err := s.marshaler.Marshal(&edg)
     if err != nil {
         return err
     }
@@ -95,7 +95,7 @@ func NewEdgeStore[Edg Edge[N], N any](store types.KVStore, prefix []byte, keyer 
 
 // Set a record in the backend storage engine.
 func (s *EdgeStore[Edg, N]) Set(edg Edg) error {
-    bytes, err := s.marshaler.Marshal(edg)
+    bytes, err := s.marshaler.Marshal(&edg)
     if err != nil {
         return err
     }
