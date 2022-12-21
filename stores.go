@@ -1,9 +1,5 @@
 package raccoon
 
-import (
-    "github.com/cosmos/cosmos-sdk/store/types"
-)
-
 const (
     inPrefix = "/in"
     outPrefix = "/out"
@@ -14,7 +10,7 @@ const (
 // Store Wrapper for records indexed by a certain field
 // Keys in store have the pattern: {prefix}/{indexName}/{mappedValue}/{edgeKey}
 type SecondaryIndexStore[Edg Edge[N], N any] struct {
-    store types.KVStore
+    store KVStore
     prefix []byte
     indexName string
     mapper Mapper[Edg]
@@ -22,7 +18,7 @@ type SecondaryIndexStore[Edg Edge[N], N any] struct {
     marshaler Marshaler[Edg]
 }
 
-func NewSecondaryIdxStore[Edg Edge[N], N any](store types.KVStore, prefix []byte, indexName string, keyer NodeKeyer[N], mapper Mapper[Edg], marshaler Marshaler[Edg]) SecondaryIndexStore[Edg, N] {
+func NewSecondaryIdxStore[Edg Edge[N], N any](store KVStore, prefix []byte, indexName string, keyer NodeKeyer[N], mapper Mapper[Edg], marshaler Marshaler[Edg]) SecondaryIndexStore[Edg, N] {
     idxKeyer := NewSecIdxKeyer[Edg, N](keyer, mapper, indexName, prefix)
     return SecondaryIndexStore[Edg, N] {
         store: store,
@@ -76,13 +72,13 @@ func (s *SecondaryIndexStore[Edg, N]) FilterByIdx(idx []byte, predicate Predicat
 // Setting and Deleting records updates internal indexes to guarantee consistency.
 // TODO make it atomic
 type EdgeStore[Edg Edge[N], N any] struct {
-    store types.KVStore
+    store KVStore
     prefix []byte
     keyer EdgeKeyer[N]
     marshaler Marshaler[Edg]
 }
 
-func NewEdgeStore[Edg Edge[N], N any](store types.KVStore, prefix []byte, keyer NodeKeyer[N], marshaler Marshaler[Edg]) EdgeStore[Edg, N] {
+func NewEdgeStore[Edg Edge[N], N any](store KVStore, prefix []byte, keyer NodeKeyer[N], marshaler Marshaler[Edg]) EdgeStore[Edg, N] {
     base := Key{}.Append(prefix)
     edgKeyer := NewEdgeKeyer[N](keyer, base, []byte(inPrefix), []byte(outPrefix))
     return EdgeStore[Edg, N] {
@@ -118,8 +114,8 @@ func (s *EdgeStore[Edg, N]) Set(edg Edg) error {
 func (s *EdgeStore[Edg, N]) GetEdg(source, dest N) (Option[Edg], error) {
     key := s.keyer.OutgoingKey(source, dest)
 
-    bytes := s.store.Get(key.ToBytes())
-    if bytes == nil {
+    bytes, err := s.store.Get(key.ToBytes())
+    if bytes == nil || err != nil {
         return None[Edg](), nil
     }
 

@@ -1,11 +1,54 @@
 package raccoon
 
-import (
-    "github.com/cosmos/cosmos-sdk/store/types"
-)
 
 // Type alias for KVStore
-type KVStore types.KVStore
+type KVStore interface {
+    Get(key []byte) ([]byte, error)
+    Has(key []byte) (bool, error)
+    Set(key, value []byte) error
+    Delete(key []byte) error
+    Iterator(start, end []byte) Iterator
+}
+
+// Type ObjKV wraps KVStore by abstracting object marshaling
+type ObjKV[T any] interface {
+    // Fetch object from store using the given key
+    Get(key []byte) (Option[T], error)
+
+    // Check whether key exists in KVStore
+    Has(key []byte) (bool, error)
+
+    // Set key with obj
+    Set(key []byte, obj T) error
+
+    // Remove key from store
+    Delete(key []byte) error
+}
+
+type Iterator interface {
+    // Valid returns whether the current iterator is valid. Once invalid, the Iterator remains
+    // invalid forever.
+    Valid() bool
+
+    // Next moves the iterator to the next key in the database, as defined by order of iteration.
+    // If Valid returns false, this method will panic.
+    Next()
+
+    // Key returns the key at the current position. Panics if the iterator is invalid.
+    // CONTRACT: key readonly []byte
+    Key() (key []byte)
+
+    // Value returns the value at the current position. Panics if the iterator is invalid.
+    // CONTRACT: value readonly []byte
+    Value() (value []byte)
+
+    // Error returns the last error encountered by the iterator, if any.
+    Error() error
+
+    // Close closes the iterator, relasing any allocated resources.
+    Close() error
+}
+
 
 // Predicate type defines a filter over a Record set
 type Predicate[T any] func(T) bool
@@ -70,4 +113,8 @@ type DirectedEdge[Node any] interface {
 // UndirectedEdge specialization of an Edge.
 type UndirectedEdge[Node any] interface {
     Edge[Node]
+}
+
+type TypePointer[T any] interface {
+    *T
 }

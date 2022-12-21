@@ -2,28 +2,34 @@
 // store for a protobuff serializable entity
 package raccoon
 
-import (
-    cosmos "github.com/cosmos/cosmos-sdk/store/types"
-
-)
-
 
 type ObjectStore[Obj any] struct {
-    store cosmos.KVStore
+    store KVStore
     prefix []byte
-    marshaller Marshaler[Obj]
+    marshaler Marshaler[Obj]
     ider Ider[Obj]
     baseKey Key
 }
 
+func NewObjStore[O any](kv KVStore, prefix []byte, marshaler Marshaler[O], ider Ider[O]) ObjectStore[O] {
+    return ObjectStore[O]{
+        store: kv,
+        prefix: prefix,
+        marshaler: marshaler,
+        ider: ider,
+        baseKey: Key{}.Append(prefix),
+    }
+}
+
 func (s *ObjectStore[Obj]) GetObject(id []byte) (Option[Obj], error) {
     key := s.baseKey.Append(id)
-    bytes := s.store.Get(key.ToBytes())
-    if bytes == nil {
-        return None[Obj](), nil
+    bytes, err := s.store.Get(key.ToBytes())
+
+    if err != nil || bytes == nil{
+        return None[Obj](), err
     }
 
-    obj, err := s.marshaller.Unmarshal(bytes)
+    obj, err := s.marshaler.Unmarshal(bytes)
     if err != nil {
         return None[Obj](), err
     }
@@ -33,7 +39,7 @@ func (s *ObjectStore[Obj]) GetObject(id []byte) (Option[Obj], error) {
 }
 
 func (s *ObjectStore[Obj]) SetObject(obj Obj) error {
-    bytes, err := s.marshaller.Marshal(&obj)
+    bytes, err := s.marshaler.Marshal(obj)
     if err != nil {
         return err
     }
@@ -54,4 +60,3 @@ func (s *ObjectStore[Obj]) Delete(obj Obj) error {
     id := s.ider.Id(obj)
     return s.DeleteById(id)
 }
-

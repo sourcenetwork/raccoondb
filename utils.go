@@ -1,20 +1,17 @@
 package raccoon
 
-import (
-    "github.com/cosmos/cosmos-sdk/store/types"
-)
 
 func ProduceTrue[T any](t T) bool {
     return true
 }
 
 // Accumulates every item in iterator into a slice
-func consumeIter[T any](iter types.Iterator, marshaler Marshaler[T]) ([]T, error) {
+func consumeIter[T any](iter Iterator, marshaler Marshaler[T]) ([]T, error) {
     return filterConsumeIter[T](iter, marshaler, ProduceTrue[T])
 }
 
 // Accumlates iterator items that match the predicate function into a slice.
-func filterConsumeIter[T any](iter types.Iterator, marshaler Marshaler[T], predicate Predicate[T]) ([]T, error) {
+func filterConsumeIter[T any](iter Iterator, marshaler Marshaler[T], predicate Predicate[T]) ([]T, error) {
     defer iter.Close()
 
     var records []T

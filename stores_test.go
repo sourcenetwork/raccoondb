@@ -3,7 +3,6 @@ package raccoon
 import (
 	"testing"
         "github.com/stretchr/testify/assert"
-        "github.com/cosmos/cosmos-sdk/store/mem"
 )
 
 // Simple implementation of Edge interface
@@ -49,7 +48,7 @@ var _ NodeKeyer[uint8] = (*recordKeyer)(nil)
 
 
 func TestEdgeStoreSetThenGet(t *testing.T) {
-    kv := mem.NewStore()
+    kv := NewMemKV()
     var keyer NodeKeyer[uint8] = &recordKeyer{}
     marshaler := &Json[record]{}
     var store EdgeStore[record, uint8] = NewEdgeStore[record, uint8](kv, nil, keyer, marshaler)
@@ -66,7 +65,7 @@ func TestEdgeStoreSetThenGet(t *testing.T) {
 }
 
 func TestEdgeStoreCannotGetADeleteValue(t *testing.T) {
-    kv := mem.NewStore()
+    kv := NewMemKV()
     var keyer NodeKeyer[uint8] = &recordKeyer{}
     marshaler := &Json[record]{}
     var store EdgeStore[record, uint8] = NewEdgeStore[record, uint8](kv, nil, keyer, marshaler)
@@ -84,7 +83,7 @@ func TestEdgeStoreCannotGetADeleteValue(t *testing.T) {
 }
 
 func TestEdgeStoreGetSucessorsReturnDirectSucessors(t *testing.T) {
-    kv := mem.NewStore()
+    kv := NewMemKV()
     var keyer NodeKeyer[uint8] = &recordKeyer{}
     marshaler := &Json[record]{}
     var store EdgeStore[record, uint8] = NewEdgeStore[record, uint8](kv, nil, keyer, marshaler)
@@ -105,7 +104,7 @@ func TestEdgeStoreGetSucessorsReturnDirectSucessors(t *testing.T) {
 }
 
 func TestEdgeStoreGetSucessorsReturnDirectAncestors(t *testing.T) {
-    kv := mem.NewStore()
+    kv := NewMemKV()
     var keyer NodeKeyer[uint8] = &recordKeyer{}
     marshaler := &Json[record]{}
     var store EdgeStore[record, uint8] = NewEdgeStore[record, uint8](kv, nil, keyer, marshaler)
@@ -130,7 +129,7 @@ func TestEdgeStoreGetSucessorsReturnDirectAncestors(t *testing.T) {
 }
 
 func TestSecondaryIdxStoreSetThenGet(t *testing.T) {
-    kv := mem.NewStore()
+    kv := NewMemKV()
     var keyer NodeKeyer[uint8] = &recordKeyer{}
     marshaler := &Json[record]{}
     mapper := func(r record) []byte { return []byte(r.Data) }
@@ -152,7 +151,7 @@ func TestSecondaryIdxStoreSetThenGet(t *testing.T) {
 }
 
 func TestSecondaryIdxStoreSetThenGetFromUnknwonIdxReturnsEmptySlice(t *testing.T) {
-    kv := mem.NewStore()
+    kv := NewMemKV()
     var keyer NodeKeyer[uint8] = &recordKeyer{}
     marshaler := &Json[record]{}
     mapper := func(r record) []byte { return []byte(r.Data) }
@@ -173,7 +172,7 @@ func TestSecondaryIdxStoreSetThenGetFromUnknwonIdxReturnsEmptySlice(t *testing.T
 }
 
 func TestSecondaryIdxStoreDelete(t *testing.T) {
-    kv := mem.NewStore()
+    kv := NewMemKV()
     var keyer NodeKeyer[uint8] = &recordKeyer{}
     marshaler := &Json[record]{}
     mapper := func(r record) []byte { return []byte(r.Data) }
