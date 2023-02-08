@@ -11,6 +11,7 @@ type ProtoConstraint[T any] interface {
     *T
 }
 
+/*
 // Marshaler implementation for protobuff objects
 type ProtoMarshaler[T any, PT ProtoConstraint[T]] struct {}
 
@@ -28,6 +29,35 @@ func (m *ProtoMarshaler[T, PT]) Unmarshal(bytes []byte) (T, error) {
     p := PT(&obj)
     
     err := proto.Unmarshal(bytes, p)
+    if err != nil {
+        return obj, err
+    }
+    return obj, nil
+}
+*/
+
+// Marshaler implementation for protobuff objects
+type factoryProtoMarshaler[T proto.Message] struct {
+    factory func() T
+}
+
+func ProtoMarshaler[T proto.Message](factory func() T) Marshaler[T] {
+    return &factoryProtoMarshaler[T]{
+        factory: factory,
+    }
+}
+
+func (m *factoryProtoMarshaler[T]) Marshal(obj *T) ([]byte, error) {
+    bytes, err := proto.Marshal(*obj)
+    if err != nil {
+        return nil, err
+    }
+    return bytes, nil
+}
+
+func (m *factoryProtoMarshaler[T]) Unmarshal(bytes []byte) (T, error) {
+    obj := m.factory()
+    err := proto.Unmarshal(bytes, obj)
     if err != nil {
         return obj, err
     }

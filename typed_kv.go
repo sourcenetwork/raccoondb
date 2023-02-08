@@ -52,7 +52,7 @@ func (s *objKV[Obj]) Get(key []byte) (Option[Obj], error) {
 func (s *objKV[Obj]) Set(key []byte, obj Obj) error {
     key = s.getFullKey(key)
 
-    bytes, err := s.marshaler.Marshal(obj)
+    bytes, err := s.marshaler.Marshal(&obj)
     if err != nil {
         return fmt.Errorf("failed unmarshaling obj %v: %w", key, err)
     }

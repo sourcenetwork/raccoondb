@@ -39,7 +39,7 @@ func (s *ObjectStore[Obj]) GetObject(id []byte) (Option[Obj], error) {
 }
 
 func (s *ObjectStore[Obj]) SetObject(obj Obj) error {
-    bytes, err := s.marshaler.Marshal(obj)
+    bytes, err := s.marshaler.Marshal(&obj)
     if err != nil {
         return err
     }
