@@ -98,4 +98,9 @@ func (s *RaccoonStore[Edg, N]) Delete(edg Edg) (error) {
     return s.recordStore.Delete(edg)
 }
 
+// List returns all Edges in RaccoonStore
+func (s *RaccoonStore[Edg, N]) List() ([]Edg, error) {
+    return s.recordStore.List()
+}
+
 // TODO Define other methods such as filtering

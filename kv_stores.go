@@ -3,11 +3,24 @@ package raccoon
 import (
     "github.com/cosmos/cosmos-sdk/store/mem"
     "github.com/cosmos/cosmos-sdk/store/types"
+    tmdb "github.com/tendermint/tm-db"
 )
 
+var _ KVStore = (*tmdbWrapper)(nil)
 
 func NewMemKV() KVStore {
     return KvFromCosmosKv(mem.NewStore())
+}
+
+func NewLevelDB(path, file string) (KVStore, error) {
+    db, err := tmdb.NewGoLevelDB(file, path)
+    if err != nil {
+        return nil, err
+    }
+    wrapper := tmdbWrapper{
+        db: db,
+    }
+    return &wrapper, nil
 }
 
 func KvFromCosmosKv(store types.KVStore) KVStore {
@@ -40,4 +53,29 @@ func (s *cosmosKvWrapper) Delete(key []byte) error {
 
 func (s *cosmosKvWrapper) Iterator(start, end []byte) Iterator {
     return s.store.Iterator(start, end)
+}
+
+type tmdbWrapper struct {
+    db tmdb.DB
+}
+
+func (s *tmdbWrapper) Get(key []byte) ([]byte, error) {
+    return s.db.Get(key)
+}
+
+func (s *tmdbWrapper) Has(key []byte) (bool, error) {
+    return s.db.Has(key)
+}
+
+func (s *tmdbWrapper) Set(key []byte, val []byte) error {
+   return s.db.Set(key, val)
+}
+
+func (s *tmdbWrapper) Delete(key []byte) error {
+    return s.db.Delete(key)
+}
+
+func (s *tmdbWrapper) Iterator(start, end []byte) Iterator {
+    iter, _ := s.db.Iterator(start, end)
+    return iter
 }

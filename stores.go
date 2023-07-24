@@ -155,4 +155,12 @@ func (s *EdgeStore[Edg, N]) GetAncestors(node N) ([]Edg, error) {
     return consumeIter[Edg](iter, s.marshaler)
 }
 
+// List dumps all Edges in the EdgeStore.
+// Performs pre-loading as opposed to streaming
+func (s *EdgeStore[Edg, N]) List() ([]Edg, error) {
+    start, end := s.keyer.AllEdges()
+    iter := s.store.Iterator(start.ToBytes(), end.ToBytes())
+    return consumeIter[Edg](iter, s.marshaler)
+}
+
 // TODO define FilterAncestors and FilterSucessors

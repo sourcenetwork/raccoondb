@@ -52,6 +52,16 @@ func (k *EdgeKeyer[Node]) AncestorsIterKey(src Node) (Key, Key) {
     return base.Append(minKey), base.Append(maxKey)
 }
 
+// AllEdges return a pair of keys which span through all possible set of edges
+func (k *EdgeKeyer[Node]) AllEdges() (Key, Key) {
+    minKey := k.keyer.MinKey()
+    maxKey := k.keyer.MaxKey()
+
+    start := k.base.Append(k.inPrefix, minKey, minKey)
+    end := k.base.Append(k.inPrefix, maxKey, maxKey)
+    return start, end
+}
+
 type SecondaryIdxKeyer[Edg Edge[N], N any] struct {
     keyer NodeKeyer[N]
     mapper Mapper[Edg]
