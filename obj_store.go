@@ -46,17 +46,24 @@ func (s *ObjectStore[Obj]) SetObject(obj Obj) error {
 
     id := s.ider.Id(obj)
     key := s.baseKey.Append(id)
-    s.store.Set(key.ToBytes(), bytes)
-    return nil
+    return s.store.Set(key.ToBytes(), bytes)
 }
 
 func (s *ObjectStore[Obj]) DeleteById(id []byte) error {
     key := s.baseKey.Append(id)
-    s.store.Delete(key.ToBytes())
-    return nil
+    return s.store.Delete(key.ToBytes())
 }
 
 func (s *ObjectStore[Obj]) Delete(obj Obj) error {
     id := s.ider.Id(obj)
     return s.DeleteById(id)
+}
+
+func (s *ObjectStore[Obj]) HasById(id []byte) (bool, error) {
+    return s.store.Has(id)
+}
+
+func (s *ObjectStore[Obj]) Has(obj Obj) (bool, error) {
+    id := s.ider.Id(obj)
+    return s.store.Has(id)
 }
