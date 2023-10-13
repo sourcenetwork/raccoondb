@@ -5,25 +5,20 @@ package raccoon
 
 type ObjectStore[Obj any] struct {
     store KVStore
-    prefix []byte
     marshaler Marshaler[Obj]
     ider Ider[Obj]
-    baseKey Key
 }
 
-func NewObjStore[O any](kv KVStore, prefix []byte, marshaler Marshaler[O], ider Ider[O]) ObjectStore[O] {
+func NewObjStore[O any](kv KVStore, marshaler Marshaler[O], ider Ider[O]) ObjectStore[O] {
     return ObjectStore[O]{
         store: kv,
-        prefix: prefix,
         marshaler: marshaler,
         ider: ider,
-        baseKey: Key{}.Append(prefix),
     }
 }
 
 func (s *ObjectStore[Obj]) GetObject(id []byte) (Option[Obj], error) {
-    key := s.baseKey.Append(id)
-    bytes, err := s.store.Get(key.ToBytes())
+    bytes, err := s.store.Get(id)
 
     if err != nil || bytes == nil{
         return None[Obj](), err
@@ -44,14 +39,12 @@ func (s *ObjectStore[Obj]) SetObject(obj Obj) error {
         return err
     }
 
-    id := s.ider.Id(obj)
-    key := s.baseKey.Append(id)
-    return s.store.Set(key.ToBytes(), bytes)
+    key := s.ider.Id(obj)
+    return s.store.Set(key, bytes)
 }
 
 func (s *ObjectStore[Obj]) DeleteById(id []byte) error {
-    key := s.baseKey.Append(id)
-    return s.store.Delete(key.ToBytes())
+    return s.store.Delete(id)
 }
 
 func (s *ObjectStore[Obj]) Delete(obj Obj) error {

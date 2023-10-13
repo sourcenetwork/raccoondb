@@ -1,5 +1,9 @@
 package raccoon
 
+import (
+    "bytes"
+)
+
 // WrapperKV implements raccoon's KVStore to a KVStore by wrapping its methods with a global prefix
 type WrapperKV struct {
     store KVStore
@@ -36,7 +40,64 @@ func (kv *WrapperKV) Delete(key []byte) error {
 
 
 func (kv *WrapperKV) Iterator(start, end []byte) Iterator {
-    start = kv.prefix.Append(start).ToBytes()
-    end = kv.prefix.Append(end).ToBytes()
-    return kv.store.Iterator(start, end)
+    return newPrefixIterator(kv.prefix, start, end, kv.store)
+}
+
+func newPrefixIterator(prefix Key, start, end []byte, store KVStore) *prefixIterator {
+    prefixBytes := prefix.Append(nil).ToBytes()
+    start = prefix.Append(start).ToBytes()
+    // if end is nil, the iterator must be unbounded
+    if end != nil {
+        end = prefix.Append(end).ToBytes()
+    }
+
+    iter := store.Iterator(start, end)
+    
+    return &prefixIterator{
+        prefix: prefixBytes,
+        iter: iter,
+        done: false,
+    }
+}
+
+type prefixIterator struct {
+    prefix []byte
+    iter Iterator
+    done bool
+}
+
+
+func (i *prefixIterator) Valid() bool {
+    if i.done {
+        return false
+    }
+    return i.iter.Valid()
+}
+
+// Next steps the iterator to the next value
+// if the next value does not contain prefix, the scan is done
+func (i *prefixIterator) Next() {
+    i.iter.Next()
+
+    if !i.iter.Valid() || !bytes.HasPrefix(i.iter.Key(), i.prefix) {
+        i.done = true
+    } 
+}
+
+// Key strips prefix from Key
+func (i *prefixIterator) Key() (key []byte) {
+    key = i.iter.Key()
+    return key[len(i.prefix):]
+}
+
+func (i *prefixIterator) Value() (value []byte) {
+    return i.iter.Value()
+}
+
+func (i *prefixIterator) Error() error {
+    return i.iter.Error()
+}
+
+func (i *prefixIterator) Close() error {
+    return i.iter.Close()
 }
