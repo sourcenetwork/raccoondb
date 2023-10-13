@@ -67,3 +67,20 @@ func (s *ObjectStore[Obj]) Has(obj Obj) (bool, error) {
     id := s.ider.Id(obj)
     return s.store.Has(id)
 }
+
+func (s *ObjectStore[Obj]) ListIds() ([][]byte, error) {
+    iter := s.store.Iterator(nil, nil)
+
+    var ids [][]byte
+
+    for ; iter.Valid(); iter.Next() {
+        key := iter.Key()
+        if err := iter.Error(); err != nil {
+            return nil, err
+        }
+
+        ids = append(ids, key)
+    }
+
+    return ids, nil
+}
