@@ -77,3 +77,24 @@ func (s *ObjectStore[Obj]) ListIds() ([][]byte, error) {
 
     return ids, nil
 }
+
+func (s *ObjectStore[Obj]) List() ([]Obj, error) {
+    iter := s.store.Iterator(nil, nil)
+
+    var objs []Obj
+
+    for ; iter.Valid(); iter.Next() {
+        if err := iter.Error(); err != nil {
+            return nil, err
+        }
+
+        value := iter.Value()
+        obj, err := s.marshaler.Unmarshal(value)
+        if err != nil {
+            return nil, err
+        }
+        objs = append(objs, obj)
+    }
+
+    return objs, nil
+}
