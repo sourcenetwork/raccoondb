@@ -2,6 +2,7 @@
 // store for a protobuff serializable entity
 package raccoon
 
+type ObjectPredicate[Obj any] func(Obj) bool
 
 type ObjectStore[Obj any] struct {
     store KVStore
@@ -79,6 +80,11 @@ func (s *ObjectStore[Obj]) ListIds() ([][]byte, error) {
 }
 
 func (s *ObjectStore[Obj]) List() ([]Obj, error) {
+    identity := func(o Obj) bool { return true }
+    return s.Filter(identity)
+}
+
+func (s *ObjectStore[Obj]) Filter(predicate ObjectPredicate[Obj]) ([]Obj, error) {
     iter := s.store.Iterator(nil, nil)
 
     var objs []Obj
@@ -93,7 +99,9 @@ func (s *ObjectStore[Obj]) List() ([]Obj, error) {
         if err != nil {
             return nil, err
         }
-        objs = append(objs, obj)
+        if predicate(obj) {
+            objs = append(objs, obj)
+        }
     }
 
     return objs, nil
