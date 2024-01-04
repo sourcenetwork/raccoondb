@@ -1,8 +1,8 @@
 package raccoon
 
 import (
-    "github.com/cosmos/cosmos-sdk/store/mem"
-    "github.com/cosmos/cosmos-sdk/store/types"
+    "cosmossdk.io/store/mem"
+    "cosmossdk.io/store/types"
     tmdb "github.com/tendermint/tm-db"
 )
 
