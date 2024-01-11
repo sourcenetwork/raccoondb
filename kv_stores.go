@@ -1,81 +1,82 @@
 package raccoon
 
 import (
-    "cosmossdk.io/store/mem"
-    "cosmossdk.io/store/types"
-    tmdb "github.com/tendermint/tm-db"
+	storetypes "cosmossdk.io/store/types"
+
+	"cosmossdk.io/store/mem"
+	dbm "github.com/cosmos/cosmos-db"
 )
 
-var _ KVStore = (*tmdbWrapper)(nil)
+var _ KVStore = (*dbmWrapper)(nil)
 
 func NewMemKV() KVStore {
-    return KvFromCosmosKv(mem.NewStore())
+	return KvFromCosmosKv(mem.NewStore())
 }
 
 func NewLevelDB(path, file string) (KVStore, error) {
-    db, err := tmdb.NewGoLevelDB(file, path)
-    if err != nil {
-        return nil, err
-    }
-    wrapper := tmdbWrapper{
-        db: db,
-    }
-    return &wrapper, nil
+	db, err := dbm.NewGoLevelDB(file, path, nil)
+	if err != nil {
+		return nil, err
+	}
+	wrapper := dbmWrapper{
+		db: db,
+	}
+	return &wrapper, nil
 }
 
-func KvFromCosmosKv(store types.KVStore) KVStore {
-    return &cosmosKvWrapper {
-        store: store,
-    }
+func KvFromCosmosKv(store storetypes.KVStore) KVStore {
+	return &cosmosKvWrapper{
+		store: store,
+	}
 }
 
 type cosmosKvWrapper struct {
-    store types.KVStore
+	store storetypes.KVStore
 }
 
 func (s *cosmosKvWrapper) Get(key []byte) ([]byte, error) {
-    return s.store.Get(key), nil
+	return s.store.Get(key), nil
 }
 
 func (s *cosmosKvWrapper) Has(key []byte) (bool, error) {
-    return s.store.Has(key), nil
+	return s.store.Has(key), nil
 }
 
 func (s *cosmosKvWrapper) Set(key []byte, val []byte) error {
-   s.store.Set(key, val) 
-   return nil
+	s.store.Set(key, val)
+	return nil
 }
 
 func (s *cosmosKvWrapper) Delete(key []byte) error {
-    s.store.Delete(key)
-    return nil
+	s.store.Delete(key)
+	return nil
 }
 
 func (s *cosmosKvWrapper) Iterator(start, end []byte) Iterator {
-    return s.store.Iterator(start, end)
+	return s.store.Iterator(start, end)
 }
 
-type tmdbWrapper struct {
-    db tmdb.DB
+type dbmWrapper struct {
+	db dbm.DB
 }
 
-func (s *tmdbWrapper) Get(key []byte) ([]byte, error) {
-    return s.db.Get(key)
+func (s *dbmWrapper) Get(key []byte) ([]byte, error) {
+	return s.db.Get(key)
 }
 
-func (s *tmdbWrapper) Has(key []byte) (bool, error) {
-    return s.db.Has(key)
+func (s *dbmWrapper) Has(key []byte) (bool, error) {
+	return s.db.Has(key)
 }
 
-func (s *tmdbWrapper) Set(key []byte, val []byte) error {
-   return s.db.Set(key, val)
+func (s *dbmWrapper) Set(key []byte, val []byte) error {
+	return s.db.Set(key, val)
 }
 
-func (s *tmdbWrapper) Delete(key []byte) error {
-    return s.db.Delete(key)
+func (s *dbmWrapper) Delete(key []byte) error {
+	return s.db.Delete(key)
 }
 
-func (s *tmdbWrapper) Iterator(start, end []byte) Iterator {
-    iter, _ := s.db.Iterator(start, end)
-    return iter
+func (s *dbmWrapper) Iterator(start, end []byte) Iterator {
+	iter, _ := s.db.Iterator(start, end)
+	return iter
 }
