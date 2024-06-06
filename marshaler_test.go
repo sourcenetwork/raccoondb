@@ -1,11 +1,11 @@
 package raccoon
 
 import (
-    _"testing"
+	_ "testing"
 
-    _ "github.com/stretchr/testify/assert"
-
+	_ "github.com/stretchr/testify/assert"
 )
+
 /*
 
 func TestProtoMarshaler(t *testing.T) {
