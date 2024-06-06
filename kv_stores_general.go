@@ -6,7 +6,7 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 )
 
-func NewLevelDB(path, file string) (KVStore, error) {
+func NewPersistentKV(path, file string) (KVStore, error) {
 	db, err := dbm.NewGoLevelDB(file, path, nil)
 	if err != nil {
 		return nil, err
