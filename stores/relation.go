@@ -59,11 +59,11 @@ func (s *RelationStore) Delete(ctx context.Context, src, dst []byte) error {
 }
 
 func (s *RelationStore) IterateSucessors(ctx context.Context, node []byte) (iterator.BytesIterator, error) {
-	return s.sucessors.List(ctx, node)
+	return s.sucessors.GetBucketValues(ctx, node)
 }
 
 func (s *RelationStore) IterateAncestors(ctx context.Context, node []byte) (iterator.BytesIterator, error) {
-	return s.ancestors.List(ctx, node)
+	return s.ancestors.GetBucketValues(ctx, node)
 
 }
 

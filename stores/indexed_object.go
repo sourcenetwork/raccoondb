@@ -18,7 +18,7 @@ func (i *ObjectIndex[T, I]) ListKeys(ctx context.Context, bucket I) (iterator.By
 	return nil, nil
 }
 
-func (i *ObjectIndex[T, I]) IterateBuckets(ctx context.Context) (iterator.Iterator[I], error) {
+func (i *ObjectIndex[T, I]) GetObjsInBucket(ctx context.Context, bucket I) (iterator.Iterator[I], error) {
 	return nil, nil
 }
 
@@ -73,14 +73,14 @@ func (s *IndexedObjectStore[T]) Delete(ctx context.Context, key []byte) (RecordR
 	return result, nil
 }
 
-func (s *IndexedObjectStore[T]) Set(ctx context.Context, key []byte, obj T) (RecordCreated, error) {
-	result, err := s.objStore.Set(ctx, key, obj)
+func (s *IndexedObjectStore[T]) Set(ctx context.Context, key []byte, obj *T) (RecordCreated, error) {
+	result, err := s.objStore.Set(ctx, key, *obj)
 	if err != nil {
 		return false, err
 	}
 
 	for _, idx := range s.indexes {
-		i := idx.mapper(obj)
+		i := idx.mapper(*obj)
 		bucket, err := idx.marshaler.Marshal(&i)
 		if err != nil {
 			return false, err

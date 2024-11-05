@@ -52,7 +52,7 @@ func (s *FieldIndexStore) Has(ctx context.Context, bucket, value []byte) (bool, 
 	return s.idx.Has(ctx, idxKey)
 }
 
-func (s *FieldIndexStore) List(ctx context.Context, bucket []byte) (iterator.BytesIterator, error) {
+func (s *FieldIndexStore) GetBucketValues(ctx context.Context, bucket []byte) (iterator.BytesIterator, error) {
 	prefixKv := NewPrefixedKV(s.idx, bucket)
 	var opts iterator.IteratorOpt // FIXME add open iterator
 	iter, err := prefixKv.Iterate(ctx, opts)
