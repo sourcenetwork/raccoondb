@@ -2,6 +2,12 @@ package iterator
 
 import "github.com/sourcenetwork/raccoondb/types"
 
+// Im not sure about this interface
+// Value should ideally not error out, but if next has to do fetching of pages or whatever
+// from disk.
+// so rly, what is the purpose of value? does it even optimize anything?
+// thonk
+
 // Iterator models a stateful traversing through some sequence of elements
 // indexed by a byte sequence key
 type Iterator[T any] interface {
@@ -12,6 +18,7 @@ type Iterator[T any] interface {
 	Next() error
 
 	// Value returns the current value in the Iterator
+	// Should only return None if Next returned an error
 	Value() types.Option[T]
 
 	// Finished indicates whether the Iterator scanned through all possible keys

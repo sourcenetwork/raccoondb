@@ -77,7 +77,7 @@ func (s *KeyObjectStore[Obj]) Iterate(ctx context.Context, opts iterator.Iterato
 		return s.marshaler.Unmarshal(bytes)
 	}
 
-	objIter := iterator.TryMap(iter, mapper)
+	objIter := iterator.MapFailable(iter, mapper)
 	return objIter, nil
 }
 

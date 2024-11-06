@@ -1,77 +1,54 @@
 package iterator
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/sourcenetwork/raccoondb/types"
 )
 
+// ErrMapper models an error that happened when MapIter attempted to map an element
+var ErrMapper = errors.New("mapping failed")
+
+// FailableMapper maps T to U or errors
+type FailableMapper[T, U any] func(T) (U, error)
+
+// FailableMapper maps T to U
 type Mapper[T, U any] func(T) U
 
-// Map wraps an iterator, applying the mapper function for each
-// value of the inner iterator
-func Map[T, U any](iterator Iterator[T], mapper Mapper[T, U]) Iterator[U] {
-	return &mapIterator[T, U]{
+// MapFailable wraps an iterator, applying the mapper function for each
+// value of the inner iterator.
+// If the mapping for an element fails Next() will return an error and
+// Value() will return None.
+// Then the Iter will move to the next element
+func MapFailable[T, U any](iterator Iterator[T], mapper FailableMapper[T, U]) Iterator[U] {
+	return &MapIter[T, U]{
 		inner:  iterator,
 		mapper: mapper,
 	}
 }
 
-// TryMap wraps an iterator, applying the mapper function for each
-// value of the inner iterator. If the mapping for an element fails,
-// Next() will return an error, Value() will return None and that element is skipped.
-func TryMap[T, U any](iterator Iterator[T], mapper FailableMapper[T, U]) Iterator[U] {
-	return nil
-}
-
-var _ Iterator[any] = (*mapIterator[any, any])(nil)
-
-type mapIterator[T, U any] struct {
-	inner  Iterator[T]
-	mapper Mapper[T, U]
-}
-
-func (i *mapIterator[T, U]) Next() error {
-	return i.inner.Next()
-}
-
-func (i *mapIterator[T, U]) Value() types.Option[U] {
-	opt := i.inner.Value()
-	if opt.Empty() {
-		return types.None[U]()
+// Map applies the Mapper function for every element in the Iterator
+func Map[T, U any](iterator Iterator[T], mapper Mapper[T, U]) Iterator[U] {
+	m := func(t T) (U, error) {
+		return mapper(t), nil
 	}
-
-	val := opt.GetValue()
-	u := i.mapper(val)
-	return types.Some(u)
+	return &MapIter[T, U]{
+		inner:  iterator,
+		mapper: m,
+	}
 }
 
-func (i *mapIterator[T, U]) Finished() bool {
-	return i.inner.Finished()
-}
+var _ Iterator[any] = (*MapIter[any, any])(nil)
 
-func (i *mapIterator[T, U]) Close() error {
-	return i.Close()
-}
-
-func (i *mapIterator[T, U]) GetParams() IteratorOpt {
-	return i.GetParams()
-}
-
-func (i *mapIterator[T, U]) CurrentKey() []byte {
-	return i.CurrentKey()
-}
-
-var _ Iterator[any] = (*tryMapIter[any, any])(nil)
-
-type tryMapIter[T, U any] struct {
+type MapIter[T, U any] struct {
 	inner  Iterator[T]
 	mapper FailableMapper[T, U]
 	mapErr error
 	val    types.Option[U]
 }
 
-func (i *tryMapIter[T, U]) Next() error {
+func (i *MapIter[T, U]) Next() error {
 	err := i.inner.Next()
 	if err != nil {
 		i.val = types.None[U]()
@@ -87,30 +64,31 @@ func (i *tryMapIter[T, U]) Next() error {
 	val := opt.GetValue()
 	u, err := i.mapper(val)
 	if err != nil {
+		key := i.inner.CurrentKey()
 		i.val = types.None[U]()
-		return fmt.Errorf("mapping elem %v: %w", err)
+		return fmt.Errorf("elem '%v': %w: %w", string(key), ErrMapper, err)
 	}
 
 	i.val = types.Some(u)
 	return nil
 }
 
-func (i *tryMapIter[T, U]) Value() types.Option[U] {
+func (i *MapIter[T, U]) Value() types.Option[U] {
 	return i.val
 }
 
-func (i *tryMapIter[T, U]) Finished() bool {
+func (i *MapIter[T, U]) Finished() bool {
 	return i.inner.Finished()
 }
 
-func (i *tryMapIter[T, U]) Close() error {
+func (i *MapIter[T, U]) Close() error {
 	return i.Close()
 }
 
-func (i *tryMapIter[T, U]) GetParams() IteratorOpt {
+func (i *MapIter[T, U]) GetParams() IteratorOpt {
 	return i.GetParams()
 }
 
-func (i *tryMapIter[T, U]) CurrentKey() []byte {
+func (i *MapIter[T, U]) CurrentKey() []byte {
 	return i.CurrentKey()
 }
