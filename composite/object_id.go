@@ -1,17 +1,19 @@
-package stores
+package composite
+
+/*
 
 import (
 	"context"
 
 	"github.com/sourcenetwork/raccoondb/iterator"
-	"github.com/sourcenetwork/raccoondb/types"
+	"github.com/sourcenetwork/raccoondb/marshal"
 )
 
 const autoIncCounterKey = "counter"
 
 type PreSetCallback[O any] func(obj *O, id uint64)
 
-func NewIDedObjectStore[Obj any](marshaler types.Marshaler[Obj], hook PreSetCallback[Obj]) IDedObjectStore[Obj] {
+func NewIDedObjectStore[Obj any](marshaler marshal.Marshaler[Obj], hook PreSetCallback[Obj]) IDedObjectStore[Obj] {
 	return IDedObjectStore[Obj]{}
 }
 
@@ -52,5 +54,4 @@ func (s *IDedObjectStore[T]) List(ctx context.Context) (iterator.Iterator[T], er
 
 func (s *IDedObjectStore[T]) Has(ctx context.Context, id uint64) (bool, error) { return false, nil }
 
-func encUint(i uint64) []byte  { return nil }
-func decUint(bz []byte) uint64 { return 0 }
+*/

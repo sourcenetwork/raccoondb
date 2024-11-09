@@ -7,8 +7,6 @@ import (
 	"github.com/sourcenetwork/raccoondb/types"
 )
 
-// KVStore models a basic Key-Value Store
-
 type RecordRemoved bool
 type RecordCreated bool
 
@@ -22,14 +20,4 @@ type KVStore interface {
 	ReadStore
 	Set(ctx context.Context, key, value []byte) (RecordCreated, error)
 	Delete(ctx context.Context, key []byte) (RecordRemoved, error)
-}
-
-type TxnKVStore interface {
-	KVStore
-	NewTxn(context.Context) (Txn, error)
-}
-
-type Txn interface {
-	Commit(context.Context) error
-	Abort(context.Context) error
 }

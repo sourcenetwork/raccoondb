@@ -8,8 +8,9 @@ import (
 func FromSlice[T any](ts []T) Iterator[T] {
 	return &SliceAdapter[T]{
 		vals: ts,
-		idx:  0,
+		idx:  ^uint64(0),
 		done: false,
+		val:  types.None[T](),
 	}
 }
 
@@ -19,23 +20,26 @@ var _ Iterator[any] = (*SliceAdapter[any])(nil)
 type SliceAdapter[T any] struct {
 	vals []T
 	idx  uint64
+	val  types.Option[T]
 	done bool
 }
 
 func (a *SliceAdapter[T]) Next() error {
-	if a.idx+1 == uint64(len(a.vals)) {
-		a.done = true
+	if a.done {
 		return nil
 	}
-	a.idx += 1
+
+	a.idx++
+	a.val = types.Some(a.vals[a.idx])
+	if a.idx == uint64(len(a.vals)-1) {
+		a.done = true
+	}
+
 	return nil
 }
 
 func (a *SliceAdapter[T]) Value() types.Option[T] {
-	if a.done {
-		return types.None[T]()
-	}
-	return types.Some(a.vals[a.idx])
+	return a.val
 }
 
 func (a *SliceAdapter[T]) Finished() bool {

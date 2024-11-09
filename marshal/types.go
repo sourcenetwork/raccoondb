@@ -1,4 +1,4 @@
-package types
+package marshal
 
 // Marshaler marshalls and unmarshalls objects into a byte array,
 // which gets persisted in the underlying store

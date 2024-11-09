@@ -46,6 +46,10 @@ func Consume[T any](iter Iterator[T]) ([]T, []error) {
 		opt := iter.Value()
 		items = append(items, opt.GetValue())
 	}
+	err := iter.Close()
+	if err != nil {
+		errors = append(errors, err)
+	}
 	return items, errors
 }
 
@@ -87,7 +91,3 @@ func Fold[T, Acc any](iter Iterator[T], acc Acc, f FoldingFunc[T, Acc]) (Acc, er
 	iter.Close()
 	return acc, nil
 }
-
-// TODO
-// iter from channel
-// iter to channel

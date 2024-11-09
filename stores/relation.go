@@ -1,5 +1,6 @@
 package stores
 
+/*
 import (
 	"context"
 
@@ -53,7 +54,7 @@ func (s *RelationStore) Delete(ctx context.Context, src, dst []byte) error {
 		if err != nil {
 			return err
 		}
-	*/
+	/
 
 	return nil
 }
@@ -80,3 +81,5 @@ func (s *RelationStore) Has(ctx context.Context, src, dst []byte) (bool, error) 
 func (s *RelationStore) GetNodeCount(ctx context.Context) (uint64, error) {
 	return s.nodes.GetCount(ctx)
 }
+
+*/

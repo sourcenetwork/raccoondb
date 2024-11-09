@@ -1,19 +1,28 @@
 package stores
 
-func NewPrefixedKV(store KVStore, prefix []byte) KVStore {
-	return nil
-}
-
-/*
 import (
-	"bytes"
 	"context"
+	"fmt"
 
+	"github.com/sourcenetwork/raccoondb/errors"
 	"github.com/sourcenetwork/raccoondb/iterator"
 	"github.com/sourcenetwork/raccoondb/types"
 )
 
-var _ iterator.BytesIterator = (*prefixIterator)(nil)
+var ErrPrefixStore = errors.New("prefix store")
+
+func newPrefixErr(method string, msg string, err error) error {
+	return fmt.Errorf("%w: %v: %v: %w", &ErrPrefixStore, method, msg, err)
+}
+
+func NewPrefixedKV(store KVStore, prefix []byte) KVStore {
+	return &PrefixStore{
+		store:  store,
+		prefix: prefix,
+	}
+}
+
+var _ iterator.BytesIterator = (*prefixStoreIterator)(nil)
 var _ KVStore = (*PrefixStore)(nil)
 
 // PrefixStore implements raccoon's KVStore to a KVStore by wrapping its methods with a global prefix
@@ -22,94 +31,86 @@ type PrefixStore struct {
 	prefix []byte
 }
 
-func NewPrefixedKV(store KVStore, prefix []byte) KVStore {
-	prefixKey := Key{}.Append(prefix)
-	return &PrefixStore{
-		store:  store,
-		prefix: prefixKey,
-	}
-}
+func (kv *PrefixStore) joinKey(key []byte) []byte { return concatKey(kv.prefix, key) }
 
-func (kv *PrefixStore) Get(ctx context.Context, key []byte) ([]byte, error) {
-	key = kv.prefix.Append(key).ToBytes()
-	return kv.store.Get(ctx, key)
+func (kv *PrefixStore) Get(ctx context.Context, key []byte) (types.Option[[]byte], error) {
+	key = kv.joinKey(key)
+	opt, err := kv.store.Get(ctx, key)
+	if err != nil {
+		return types.None[[]byte](), newPrefixErr("Get", "fetching key", err)
+	}
+	return opt, nil
 }
 
 func (kv *PrefixStore) Has(ctx context.Context, key []byte) (bool, error) {
-	key = kv.prefix.Append(key).ToBytes()
-	return kv.store.Has(key)
-}
-
-func (kv *PrefixStore) Set(ctx context.Context, key, value []byte) error {
-	key = kv.prefix.Append(key).ToBytes()
-	return kv.store.Set(key, value)
-}
-
-func (kv *PrefixStore) Delete(ctx context.Context, key []byte) error {
-	key = kv.prefix.Append(key).ToBytes()
-	return kv.store.Delete(key)
-}
-
-func (kv *PrefixStore) Iterator(ctx context.Context, start, end []byte) iterator.BytesIterator {
-	return newPrefixIterator(kv.prefix, start, end, kv.store)
-}
-
-func newPrefixIterator(prefix Key, start, end []byte, store KVStore) *prefixIterator {
-	prefixBytes := prefix.Append(nil).ToBytes()
-	start = prefix.Append(start).ToBytes()
-	// if end is nil, the iterator must be unbounded
-	if end != nil {
-		end = prefix.Append(end).ToBytes()
+	key = kv.joinKey(key)
+	has, err := kv.store.Has(ctx, key)
+	if err != nil {
+		return false, newPrefixErr("Has", "checking", err)
 	}
-
-	iter := store.Iterator(start, end)
-
-	return &prefixIterator{
-		prefix: prefixBytes,
-		iter:   iter,
-		done:   false,
-	}
+	return has, nil
 }
 
-type prefixIterator struct {
+func (kv *PrefixStore) Set(ctx context.Context, key, value []byte) (RecordCreated, error) {
+	key = kv.joinKey(key)
+	created, err := kv.store.Set(ctx, key, value)
+	if err != nil {
+		return false, newPrefixErr("Set", "setting value", err)
+	}
+	return created, nil
+}
+
+func (kv *PrefixStore) Delete(ctx context.Context, key []byte) (RecordRemoved, error) {
+	key = kv.joinKey(key)
+	deleted, err := kv.store.Delete(ctx, key)
+	if err != nil {
+		return false, newPrefixErr("Delete", "removing record", err)
+	}
+	return deleted, nil
+}
+
+func (kv *PrefixStore) Iterate(ctx context.Context, opt iterator.IteratorOpt) (iterator.BytesIterator, error) {
+	iter, err := kv.store.Iterate(ctx, opt)
+	if err != nil {
+		return nil, newPrefixErr("Iterator", "creating iterator", err)
+	}
+	return &prefixStoreIterator{
+		iter:   iterator.NewPrefixIterator(kv.prefix, iter),
+		prefix: kv.prefix,
+	}, nil
+}
+
+// prefixStoreIterator
+type prefixStoreIterator struct {
+	iter   *iterator.PrefixIterator[[]byte]
 	prefix []byte
-	iter   types.BytesIterator
-	done   bool
 }
 
-func (i *prefixIterator) Valid() bool {
-	if i.done {
-		return false
-	}
-	return i.iter.Valid()
+func (i *prefixStoreIterator) Finished() bool {
+	return i.iter.Finished()
 }
 
-// Next steps the iterator to the next value
-// if the next value does not contain prefix, the scan is done
-func (i *prefixIterator) Next() {
-	i.iter.Next()
-
-	if !i.iter.Valid() || !bytes.HasPrefix(i.iter.Key(), i.prefix) {
-		i.done = true
-	}
+func (i *prefixStoreIterator) Next() error {
+	return i.iter.Next()
 }
 
 // Key strips prefix from Key
-func (i *prefixIterator) Key() (key []byte) {
-	key = i.iter.Key()
+func (i *prefixStoreIterator) CurrentKey() (key []byte) {
+	key = i.iter.CurrentKey()
+	if key == nil {
+		return nil
+	}
 	return key[len(i.prefix):]
 }
 
-func (i *prefixIterator) Value() (value []byte) {
+func (i *prefixStoreIterator) Value() types.Option[[]byte] {
 	return i.iter.Value()
 }
 
-func (i *prefixIterator) Error() error {
-	return i.iter.Error()
-}
-
-func (i *prefixIterator) Close() error {
+func (i *prefixStoreIterator) Close() error {
 	return i.iter.Close()
 }
 
-*/
+func (i *prefixStoreIterator) GetParams() iterator.IteratorOpt {
+	return i.iter.GetParams()
+}

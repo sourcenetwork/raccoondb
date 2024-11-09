@@ -2,95 +2,149 @@ package stores
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/sourcenetwork/raccoondb/errors"
 	"github.com/sourcenetwork/raccoondb/iterator"
 )
 
-// Index should group []byte *values* under []byte *buckets*
-// Add typed index afterwards
+var ErrFieldIndex = errors.New("FieldIndexStore")
 
-const buckets = "buckets"
+const bucketsPrefix = "buckets"
 const idxPrefix = "idx"
+const bucketCounterPrefix = "bucket_counter"
 
-type Indexable interface {
-	ToBytes() []byte
+func newFieldIndexErr(method string, msg string, err error) error {
+	return fmt.Errorf("%w: %v: %v: %w", ErrFieldIndex, method, msg, err)
 }
 
 func NewFieldIndexStore(kv KVStore) FieldIndexStore {
 	return FieldIndexStore{
-		baseKv:  kv,
-		buckets: NewCountedKVStore(NewPrefixedKV(kv, []byte(buckets))),
-		idx:     NewPrefixedKV(kv, []byte(idxPrefix)),
+		baseKv:        kv,
+		idx:           NewCountedKVStore(NewPrefixedKV(kv, []byte(idxPrefix))),
+		buckets:       NewCountedKVStore(NewPrefixedKV(kv, []byte(bucketsPrefix))),
+		bucketCounter: NewCounterStore(NewPrefixedKV(kv, []byte(bucketCounterPrefix))),
 	}
 }
 
 type FieldIndexStore struct {
-	baseKv  KVStore
-	buckets CountedKVStore
-	idx     KVStore
+	baseKv KVStore
+	// buckets store the user defined buckets
+	buckets *CountedKVStore
+	// bucketCounter stores a count of elements per bucket
+	bucketCounter CounterStore
+	// idx stores the indexed values inside each bucket
+	idx *CountedKVStore
 }
 
-// FIXME this is not right, it doesn't overwrite / change a previous index
-// it only appends
-func (s *FieldIndexStore) IndexValue(ctx context.Context, bucket []byte, value []byte) error {
+// IndexValue adds a value to a bucket
+//
+// If value was previously inserted in a different bucket, it doesn't scan the index
+// to remove it, that is the callers responsability.
+func (s *FieldIndexStore) IndexValue(ctx context.Context, bucket []byte, item []byte) (RecordCreated, error) {
 	_, err := s.buckets.Set(ctx, bucket, bucket)
 	if err != nil {
-		return err
+		return false, newFieldIndexErr("IndexValue", "creating bucket", err)
 	}
 
-	bucketKey := getIdxKey(bucket, value)
-	_, err = s.idx.Set(ctx, bucketKey, value)
+	key := getIdxKey(bucket, item)
+	created, err := s.idx.Set(ctx, key, item)
 	if err != nil {
-		return err
+		return false, newFieldIndexErr("IndexValue", "indexing value", err)
+	}
+	if created {
+		_, err := s.bucketCounter.Increment(ctx, bucket)
+		if err != nil {
+			return false, newFieldIndexErr("IndexValue", "incrementing bucket counter", err)
+		}
 	}
 
-	return nil
+	return created, nil
 }
 
-func (s *FieldIndexStore) Has(ctx context.Context, bucket, value []byte) (bool, error) {
-	idxKey := getIdxKey(bucket, value)
-	return s.idx.Has(ctx, idxKey)
-}
-
-func (s *FieldIndexStore) GetBucketValues(ctx context.Context, bucket []byte) (iterator.BytesIterator, error) {
-	prefixKv := NewPrefixedKV(s.idx, bucket)
-	var opts iterator.IteratorOpt // FIXME add open iterator
-	iter, err := prefixKv.Iterate(ctx, opts)
+// Has returns true if the given bucket contains item
+func (s *FieldIndexStore) Has(ctx context.Context, bucket, item []byte) (bool, error) {
+	idxKey := getIdxKey(bucket, item)
+	has, err := s.idx.Has(ctx, idxKey)
 	if err != nil {
-		return nil, err
+		return false, newFieldIndexErr("Has", "fetching", err)
+	}
+	return has, nil
+}
+
+// IterateBucketValues returns an iterator which returns all values contained in a bucket
+func (s *FieldIndexStore) IterateBucketItems(ctx context.Context, bucket []byte) (iterator.BytesIterator, error) {
+	bucketStore := NewPrefixedKV(s.idx, bucket)
+	iter, err := bucketStore.Iterate(ctx, iterator.NewOpenIterator())
+	if err != nil {
+		return nil, newFieldIndexErr("IterateBucketItems", "creating iterator", err)
 	}
 	return iter, nil
 }
 
-func (s *FieldIndexStore) Delete(ctx context.Context, value []byte) error {
-	// FIXME - deleting an entry doesn't mean I should completely unindex a value
-	// keep count of entries for bucket
-	//err := s.vals.Delete(ctx, i.ToBytes())
-	//if err != nil {
-	//return err
-	//}
+// RemoveItem removes the given item from bucket
+// If bucket did not contain item, return RecordRemoved false
+// If the removed item was the last item from the bucket, removes the bucket
+func (s *FieldIndexStore) RemoveItem(ctx context.Context, bucket, item []byte) (RecordRemoved, error) {
+	key := getIdxKey(bucket, item)
+	removed, err := s.idx.Delete(ctx, key)
+	if err != nil {
+		return false, newFieldIndexErr("RemoveItem", "removing item", err)
+	}
 
-	// FIXME need to change the delete to look for the current mapping
-	// find the current key->value map and reverse it
+	removeBucket := false
+	if removed {
+		count, err := s.bucketCounter.Decrement(ctx, bucket)
+		if err != nil {
+			return false, newFieldIndexErr("RemoveItem", "decrementing bucket counter", err)
+		}
+		if count == 0 {
+			removeBucket = true
+		}
+	}
 
-	return nil
+	if removeBucket {
+		_, err := s.bucketCounter.DeleteCounter(ctx, bucket)
+		if err != nil {
+			return false, newFieldIndexErr("RemoveItem", "removing bucket counter", err)
+		}
+
+		_, err = s.buckets.Delete(ctx, bucket)
+		if err != nil {
+			return false, newFieldIndexErr("RemoveItem", "removing bucket", err)
+		}
+	}
+
+	return removed, nil
 }
 
-func (s *FieldIndexStore) IterIndexValues(ctx context.Context) (iterator.BytesIterator, error) {
-	var opts iterator.IteratorOpt // FIXME add open iterator
-	iter, err := s.buckets.Iterate(ctx, opts)
+// IterateBuckets returns an iterator over all buckets which currently contains at least
+// one item, where the iterator key and its value are the bucket
+func (s *FieldIndexStore) IterateBuckets(ctx context.Context) (iterator.BytesIterator, error) {
+	iter, err := s.buckets.Iterate(ctx, iterator.NewOpenIterator())
 	if err != nil {
-		return nil, err
+		return nil, newFieldIndexErr("IterateBuckets", "creating iterator", err)
 	}
 	return iter, nil
 }
 
-func (s *FieldIndexStore) GetCount(ctx context.Context) (uint64, error) {
-	return s.buckets.GetCount(ctx)
+// GetBucketCount returns the number of active buckets
+func (s *FieldIndexStore) GetBucketCount(ctx context.Context) (uint64, error) {
+	count, err := s.buckets.GetCount(ctx)
+	if err != nil {
+		return 0, newFieldIndexErr("GetBucketCount", "getting count", err)
+	}
+	return count, nil
 }
 
-func (s *FieldIndexStore) UpdateIndex(ctx context.Context, values iterator.BytesIterator) error {
-	panic("todo")
+// GetIndexedItemsCount returns the total number of items that have been indexed
+// accross all buckets
+func (s *FieldIndexStore) GetIndexedItemsCount(ctx context.Context) (uint64, error) {
+	count, err := s.idx.GetCount(ctx)
+	if err != nil {
+		return 0, newFieldIndexErr("GetIndexedItemsCount", "getting count", err)
+	}
+	return count, nil
 }
 
 func getIdxKey(bucket []byte, value []byte) []byte {

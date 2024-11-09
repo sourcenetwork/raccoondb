@@ -6,5 +6,5 @@ type KeyVal[K, V any] struct {
 }
 
 func IteratorFromMap[K comparable, V any](m map[K]V) Iterator[KeyVal[K, V]] {
-	return nil
+	panic("todo")
 }

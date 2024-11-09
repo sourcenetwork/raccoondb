@@ -2,14 +2,23 @@ package iterator
 
 import "github.com/sourcenetwork/raccoondb/types"
 
-// Im not sure about this interface
-// Value should ideally not error out, but if next has to do fetching of pages or whatever
-// from disk.
-// so rly, what is the purpose of value? does it even optimize anything?
-// thonk
-
 // Iterator models a stateful traversing through some sequence of elements
 // indexed by a byte sequence key
+//
+// Expected usage:
+//
+//	defer iter.Close()
+//	for iter.Finished() {
+//		val := iter.Value()
+//		err := iter.Next();
+//		if err != nil {
+//			return err
+//		}
+//	}
+//
+// Meaning that the iterator starts ready to supply a value,
+// next moves it forward for as long as values are valid,
+// and the final next call moves it to out of bounds where it is no longer valid and finished turns true
 type Iterator[T any] interface {
 	// Next steps the iterator to its next value.
 	// It may error if for some reason the value cannot be produced.
@@ -36,21 +45,3 @@ type Iterator[T any] interface {
 
 // BytesIterator is a type alias for an iterator which returns a sequence of byte slices
 type BytesIterator Iterator[[]byte]
-
-// IteratorOpt configures the behavior of an Iterator
-// TODO improve this UX
-type IteratorOpt struct {
-	// Start represents the lower bound of iteration
-	// If nil will start at the smallest element
-	Start []byte
-
-	// End represents the uper bound of iteration
-	// If nil will end at the largest element
-	End []byte
-
-	// Prefix does a prefix iteration on the store
-	Prefix []byte
-
-	// Reverse iterates the store backwards
-	Reverse bool
-}

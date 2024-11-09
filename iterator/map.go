@@ -1,9 +1,9 @@
 package iterator
 
 import (
-	"errors"
 	"fmt"
 
+	"github.com/sourcenetwork/raccoondb/errors"
 	"github.com/sourcenetwork/raccoondb/types"
 )
 

@@ -2,110 +2,107 @@ package stores
 
 import (
 	"context"
-	"encoding/binary"
+	"fmt"
 
-	"github.com/sourcenetwork/raccoondb/types"
+	"github.com/sourcenetwork/raccoondb/errors"
+	"github.com/sourcenetwork/raccoondb/marshal"
 )
 
-// NewCounterStore returns a new counter store
-func NewCounterStore(kv KVStore, logger types.Logger) CounterStore {
+// TODO maybe the base errors should return the key which caused the error?
+
+var ErrCounterStore = errors.New("counter store")
+
+func wrapCounterErr(method string, err error) error {
+	return fmt.Errorf("counter %v: %w", method, err)
+}
+
+// NewCounterStore returns a new CounterStore
+func NewCounterStore(kv KVStore) CounterStore {
 	return CounterStore{
-		kv:     kv,
-		logger: logger,
+		kv: kv,
 	}
 }
 
-// CounterStore wraps a KV Store and creates a monotomically increasing counter
+// CounterStore abstracts a KVStore to create a store similar to a Program Counter
+// where each key has an int value associated to it
 type CounterStore struct {
-	kv     KVStore
-	logger types.Logger
-}
-
-func (r *CounterStore) getStore() KVStore {
-	return r.kv
+	kv KVStore
 }
 
 // GetFree returns the next free number in the counter
 func (r *CounterStore) GetNext(ctx context.Context, key []byte) (uint64, error) {
-	current, err := r.Get(ctx, key)
+	current, err := r.getValue(ctx, key)
 	if err != nil {
-		return 0, err
+		return 0, wrapCounterErr("GetNext", err)
 	}
 	return current + 1, nil
 }
 
 // Get return the Counter's current value - 0 if it hasn't been initialized
 func (r *CounterStore) Get(ctx context.Context, key []byte) (uint64, error) {
-	return r.getValue(ctx, key)
+	val, err := r.getValue(ctx, key)
+	if err != nil {
+		return 0, wrapCounterErr("Get", err)
+	}
+	return val, nil
 }
 
 // getValue return the Counter's current value - 0 if it hasn't been initialized
 func (r *CounterStore) getValue(ctx context.Context, key []byte) (uint64, error) {
-	kv := r.getStore()
-
 	var currID uint64 = 0
-	opt, err := kv.Get(ctx, key)
+	opt, err := r.kv.Get(ctx, key)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("%w: getting value: %w", ErrCounterStore, err)
 	}
 	if !opt.Empty() {
-		currID = decode(opt.GetValue())
+		currID = marshal.DecodeUInt(opt.GetValue())
 	}
 	return currID, nil
 }
 
 // Increment updates the counter to the next free number
 func (r *CounterStore) setValue(ctx context.Context, key []byte, counter uint64) error {
-	kv := r.getStore()
-
-	_, err := kv.Set(ctx, key, encode(counter))
+	_, err := r.kv.Set(ctx, key, marshal.EncodeUInt(counter))
 	if err != nil {
-		return err
+		return fmt.Errorf("%w: setting value: %w", ErrCounterStore, err)
 	}
-
 	return nil
 }
 
-// Increment increments the counter by 1
-func (r *CounterStore) Increment(ctx context.Context, key []byte) error {
-	_, err := r.GetNextAndIncrement(ctx, key)
-	return err
-}
-
-// Decrement reduces the counter by 1
-func (r *CounterStore) Decrement(ctx context.Context, key []byte) error {
-	counter, err := r.Get(ctx, key)
-	if err != nil {
-		return err
-	}
-	counter -= 1
-	return r.setValue(ctx, key, counter)
-}
-
-// GetNextAndIncrement gets the next free counter and increments it
-func (r *CounterStore) GetNextAndIncrement(ctx context.Context, key []byte) (uint64, error) {
+// Increment increments the counter by 1, returns new counter value
+func (r *CounterStore) Increment(ctx context.Context, key []byte) (uint64, error) {
 	// TODO make it atomic
 	free, err := r.GetNext(ctx, key)
 	if err != nil {
-		return 0, err
+		return 0, wrapCounterErr("Increment", err)
 	}
 
 	err = r.setValue(ctx, key, free)
 	if err != nil {
-		return 0, err
+		return 0, wrapCounterErr("Increment", err)
 	}
 
 	return free, nil
 }
 
-// encode maps a uin64 to a big endian byte slice
-func encode(counter uint64) []byte {
-	buff := make([]byte, 8)
-	binary.BigEndian.PutUint64(buff, counter)
-	return buff
+// Decrement reduces the counter by 1, returns new counter value
+func (r *CounterStore) Decrement(ctx context.Context, key []byte) (uint64, error) {
+	counter, err := r.Get(ctx, key)
+	if err != nil {
+		return 0, wrapCounterErr("Decrement", err)
+	}
+	counter -= 1
+	err = r.setValue(ctx, key, counter)
+	if err != nil {
+		return 0, wrapCounterErr("Decrement", err)
+	}
+	return counter, nil
 }
 
-// decode converts a big endian byte slice into a uint64
-func decode(counter []byte) uint64 {
-	return binary.BigEndian.Uint64(counter)
+func (r *CounterStore) DeleteCounter(ctx context.Context, key []byte) (RecordRemoved, error) {
+	removed, err := r.kv.Delete(ctx, key)
+	if err != nil {
+		return false, wrapCounterErr("DeleteCounter", err)
+	}
+	return removed, nil
 }
