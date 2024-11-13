@@ -9,42 +9,20 @@ func Skip[T any](n uint, iter Iterator[T]) {
 	}
 }
 
-func SkipErrors[T any](itertor Iterator[T]) Iterator[T] {
-	return nil
-}
-
-type Predicate[T any] func(T) bool
-
-// Filter returns an iterator of items that satisfies the given Predicate
-func Filter[T any](iter Iterator[T], predicate Predicate[T]) Iterator[T] {
-	return nil
-}
-
-// While returns an iterator of items for as long as predicte is valid
-func While[T any](iter Iterator[T], predicate Predicate[T]) Iterator[T] {
-	return nil
-}
-
-// ShortCircuit returns an iterator which terminates as soon as it finds the first error
-// or until it naturally ends
-func ShortCircuit[T any](iter Iterator[T]) Iterator[T] {
-	return nil
-}
-
 // Consume consumes the iterator and accumulates its items onto a slice.
 // Note: Closes the iterator
 func Consume[T any](iter Iterator[T]) ([]T, []error) {
 	var errors []error
 	var items []T
 	for iter.Finished() {
+		opt := iter.Value()
+		items = append(items, opt.GetValue())
+
 		err := iter.Next()
 		if err != nil {
 			errors = append(errors, err)
 			continue
 		}
-
-		opt := iter.Value()
-		items = append(items, opt.GetValue())
 	}
 	err := iter.Close()
 	if err != nil {

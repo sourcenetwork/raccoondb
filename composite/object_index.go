@@ -18,8 +18,9 @@ func newIdxErr(method string, msg string, err error) error {
 	return fmt.Errorf("%w: %v: %v: %w", ErrObjectIndex, method, msg, err)
 }
 
-func newObjectIndexStore[T, I any](idx *stores.FieldIndexStore, extractor IndexValueExtractor[T, I], marshaler marshal.Marshaler[I]) *ObjectIndexStore[T, I] {
+func newObjectIndexStore[T, I any](name string, idx *stores.FieldIndexStore, extractor IndexValueExtractor[T, I], marshaler marshal.Marshaler[I]) *ObjectIndexStore[T, I] {
 	return &ObjectIndexStore[T, I]{
+		name:      name,
 		index:     idx,
 		extractor: extractor,
 		marshaler: marshaler,
@@ -27,6 +28,7 @@ func newObjectIndexStore[T, I any](idx *stores.FieldIndexStore, extractor IndexV
 }
 
 type ObjectIndexStore[T any, I any] struct {
+	name      string
 	index     *stores.FieldIndexStore
 	extractor IndexValueExtractor[T, I]
 	marshaler marshal.Marshaler[I]

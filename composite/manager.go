@@ -44,7 +44,7 @@ func (m *StoreManager[T]) Initialize(kv stores.KVStore) {
 	for _, def := range m.schema.Indexes {
 		idxKv := stores.NewPrefixedKV(indexesKv, []byte(def.Name))
 		fieldIdx := stores.NewFieldIndexStore(idxKv)
-		idx := newObjectIndexStore(&fieldIdx, def.Extractor, def.Marshaler)
+		idx := newObjectIndexStore(def.Name, &fieldIdx, def.Extractor, def.Marshaler)
 
 		def.store = idx
 		idxs = append(idxs, idx)
@@ -66,7 +66,7 @@ func (m *StoreManager[T]) GetIndexedObjectStore() *IndexedObjectStore[T] {
 func GetIndex[T, I any](manager *StoreManager[T], idx *Index[T, I]) *ObjectIndexStore[T, I] {
 	s := idx.getObjectIndex()
 	if s == nil {
-		panic("manager does not manager given index")
+		panic("manager does not manage given index")
 	}
 	return s
 }

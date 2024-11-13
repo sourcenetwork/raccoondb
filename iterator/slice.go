@@ -6,11 +6,17 @@ import (
 )
 
 func FromSlice[T any](ts []T) Iterator[T] {
+	if len(ts) == 0 {
+		return &SliceAdapter[T]{
+			vals: ts,
+			idx:  0,
+			done: true,
+		}
+	}
 	return &SliceAdapter[T]{
 		vals: ts,
 		idx:  ^uint64(0),
 		done: false,
-		val:  types.None[T](),
 	}
 }
 
@@ -20,7 +26,6 @@ var _ Iterator[any] = (*SliceAdapter[any])(nil)
 type SliceAdapter[T any] struct {
 	vals []T
 	idx  uint64
-	val  types.Option[T]
 	done bool
 }
 
@@ -30,16 +35,19 @@ func (a *SliceAdapter[T]) Next() error {
 	}
 
 	a.idx++
-	a.val = types.Some(a.vals[a.idx])
-	if a.idx == uint64(len(a.vals)-1) {
+	if a.idx == uint64(len(a.vals)) {
 		a.done = true
+		return nil
 	}
 
 	return nil
 }
 
 func (a *SliceAdapter[T]) Value() types.Option[T] {
-	return a.val
+	if a.done {
+		return types.None[T]()
+	}
+	return types.Some(a.vals[a.idx])
 }
 
 func (a *SliceAdapter[T]) Finished() bool {
@@ -58,6 +66,10 @@ func (a *SliceAdapter[T]) GetParams() IteratorOpt {
 		Reverse: false,
 	}
 }
+
 func (a *SliceAdapter[T]) CurrentKey() []byte {
+	if a.done {
+		return nil
+	}
 	return marshal.EncodeUInt(a.idx)
 }
