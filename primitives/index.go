@@ -1,4 +1,4 @@
-package stores
+package primitives
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 
 	"github.com/sourcenetwork/raccoondb/errors"
 	"github.com/sourcenetwork/raccoondb/iterator"
+	"github.com/sourcenetwork/raccoondb/store"
 )
 
 var ErrFieldIndex = errors.New("FieldIndexStore")
@@ -18,7 +19,7 @@ func newFieldIndexErr(method string, msg string, err error) error {
 	return fmt.Errorf("%w: %v: %v: %w", ErrFieldIndex, method, msg, err)
 }
 
-func NewFieldIndexStore(kv KVStore) FieldIndexStore {
+func NewFieldIndexStore(kv store.KVStore) FieldIndexStore {
 	return FieldIndexStore{
 		baseKv:        kv,
 		idx:           NewCountedKVStore(NewPrefixedKV(kv, []byte(idxPrefix))),
@@ -28,7 +29,7 @@ func NewFieldIndexStore(kv KVStore) FieldIndexStore {
 }
 
 type FieldIndexStore struct {
-	baseKv KVStore
+	baseKv store.KVStore
 	// buckets store the user defined buckets
 	buckets *CountedKVStore
 	// bucketCounter stores a count of elements per bucket
@@ -41,7 +42,7 @@ type FieldIndexStore struct {
 //
 // If value was previously inserted in a different bucket, it doesn't scan the index
 // to remove it, that is the callers responsability.
-func (s *FieldIndexStore) IndexValue(ctx context.Context, bucket []byte, item []byte) (RecordCreated, error) {
+func (s *FieldIndexStore) IndexValue(ctx context.Context, bucket []byte, item []byte) (store.RecordCreated, error) {
 	_, err := s.buckets.Set(ctx, bucket, bucket)
 	if err != nil {
 		return false, newFieldIndexErr("IndexValue", "creating bucket", err)
@@ -85,7 +86,7 @@ func (s *FieldIndexStore) IterateBucketItems(ctx context.Context, bucket []byte)
 // RemoveItem removes the given item from bucket
 // If bucket did not contain item, return RecordRemoved false
 // If the removed item was the last item from the bucket, removes the bucket
-func (s *FieldIndexStore) RemoveItem(ctx context.Context, bucket, item []byte) (RecordRemoved, error) {
+func (s *FieldIndexStore) RemoveItem(ctx context.Context, bucket, item []byte) (store.RecordRemoved, error) {
 	key := getIdxKey(bucket, item)
 	removed, err := s.idx.Delete(ctx, key)
 	if err != nil {

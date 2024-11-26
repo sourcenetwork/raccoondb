@@ -1,4 +1,4 @@
-package stores
+package primitives
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"github.com/sourcenetwork/raccoondb/errors"
 	"github.com/sourcenetwork/raccoondb/iterator"
 	"github.com/sourcenetwork/raccoondb/marshal"
+	"github.com/sourcenetwork/raccoondb/store"
 	"github.com/sourcenetwork/raccoondb/types"
 )
 
@@ -16,8 +17,8 @@ func newErrKeyObject(method string, msg string, err error) error {
 	return fmt.Errorf("%w: %v: %v: %w", ErrKeyObjectStore, method, msg, err)
 }
 
-// Return a KeyObjectStore from a KVStore using marshaler to (un)marshal objects.
-func NewKeyObjectStore[O any](kv KVStore, marshaler marshal.Marshaler[O]) KeyObjectStore[O] {
+// Return a KeyObjectStore from astore.KVStore using marshaler to (un)marshal objects.
+func NewKeyObjectStore[O any](kv store.KVStore, marshaler marshal.Marshaler[O]) KeyObjectStore[O] {
 	countedKV := NewCountedKVStore(kv)
 	return KeyObjectStore[O]{
 		kv:        countedKV,
@@ -50,7 +51,7 @@ func (s *KeyObjectStore[Obj]) Get(ctx context.Context, key []byte) (types.Option
 }
 
 // Set key with obj
-func (s *KeyObjectStore[Obj]) Set(ctx context.Context, key []byte, obj Obj) (RecordCreated, error) {
+func (s *KeyObjectStore[Obj]) Set(ctx context.Context, key []byte, obj Obj) (store.RecordCreated, error) {
 	bytes, err := s.marshaler.Marshal(&obj)
 	if err != nil {
 		return false, newErrKeyObject("Set", "marshaling object failed", err)
@@ -59,7 +60,7 @@ func (s *KeyObjectStore[Obj]) Set(ctx context.Context, key []byte, obj Obj) (Rec
 }
 
 // Remove key from store
-func (s *KeyObjectStore[Obj]) Delete(ctx context.Context, key []byte) (RecordRemoved, error) {
+func (s *KeyObjectStore[Obj]) Delete(ctx context.Context, key []byte) (store.RecordRemoved, error) {
 	removed, err := s.kv.Delete(ctx, key)
 	if err != nil {
 		return false, newErrKeyObject("Delete", "deleting record", err)
@@ -67,7 +68,7 @@ func (s *KeyObjectStore[Obj]) Delete(ctx context.Context, key []byte) (RecordRem
 	return removed, nil
 }
 
-// Check whether key exists in KVStore
+// Check whether key exists instore.KVStore
 func (s *KeyObjectStore[Obj]) Has(ctx context.Context, key []byte) (bool, error) {
 	has, err := s.kv.Has(ctx, key)
 	if err != nil {

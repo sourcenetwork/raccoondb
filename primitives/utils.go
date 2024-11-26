@@ -1,4 +1,4 @@
-package stores
+package primitives
 
 // concatKey returns a slice which contains the concatination of prefix with key
 func concatKey(prefix, key []byte) []byte {

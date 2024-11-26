@@ -1,4 +1,4 @@
-package stores
+package store
 
 // base kv - maybe impl a general purpose kv wrapper which handles basic validation
 // and consistent errors for any kv implementation?

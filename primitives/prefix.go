@@ -1,4 +1,4 @@
-package stores
+package primitives
 
 import (
 	"context"
@@ -6,16 +6,17 @@ import (
 
 	"github.com/sourcenetwork/raccoondb/errors"
 	"github.com/sourcenetwork/raccoondb/iterator"
+	"github.com/sourcenetwork/raccoondb/store"
 	"github.com/sourcenetwork/raccoondb/types"
 )
 
 var ErrPrefixStore = errors.New("prefix store")
 
 func newPrefixErr(method string, msg string, err error) error {
-	return fmt.Errorf("%w: %v: %v: %w", &ErrPrefixStore, method, msg, err)
+	return fmt.Errorf("%w: %v: %v: %w", ErrPrefixStore, method, msg, err)
 }
 
-func NewPrefixedKV(store KVStore, prefix []byte) KVStore {
+func NewPrefixedKV(store store.KVStore, prefix []byte) store.KVStore {
 	return &PrefixStore{
 		store:  store,
 		prefix: prefix,
@@ -23,11 +24,11 @@ func NewPrefixedKV(store KVStore, prefix []byte) KVStore {
 }
 
 var _ iterator.BytesIterator = (*prefixStoreIterator)(nil)
-var _ KVStore = (*PrefixStore)(nil)
+var _ store.KVStore = (*PrefixStore)(nil)
 
-// PrefixStore implements raccoon's KVStore to a KVStore by wrapping its methods with a global prefix
+// PrefixStore implements raccoon's store.KVStore to a store.KVStore by wrapping its methods with a global prefix
 type PrefixStore struct {
-	store  KVStore
+	store  store.KVStore
 	prefix []byte
 }
 
@@ -51,7 +52,7 @@ func (kv *PrefixStore) Has(ctx context.Context, key []byte) (bool, error) {
 	return has, nil
 }
 
-func (kv *PrefixStore) Set(ctx context.Context, key, value []byte) (RecordCreated, error) {
+func (kv *PrefixStore) Set(ctx context.Context, key, value []byte) (store.RecordCreated, error) {
 	key = kv.joinKey(key)
 	created, err := kv.store.Set(ctx, key, value)
 	if err != nil {
@@ -60,7 +61,7 @@ func (kv *PrefixStore) Set(ctx context.Context, key, value []byte) (RecordCreate
 	return created, nil
 }
 
-func (kv *PrefixStore) Delete(ctx context.Context, key []byte) (RecordRemoved, error) {
+func (kv *PrefixStore) Delete(ctx context.Context, key []byte) (store.RecordRemoved, error) {
 	key = kv.joinKey(key)
 	deleted, err := kv.store.Delete(ctx, key)
 	if err != nil {

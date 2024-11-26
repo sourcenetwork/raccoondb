@@ -1,14 +1,14 @@
-package composite
+package table
 
 import (
 	"context"
 	"fmt"
 
 	"github.com/sourcenetwork/raccoondb/iterator"
-	"github.com/sourcenetwork/raccoondb/stores"
+	"github.com/sourcenetwork/raccoondb/primitives"
 )
 
-func materializeObjects[T any](ctx context.Context, store *stores.KeyObjectStore[T], keys ObjKeyIter) iterator.Iterator[T] {
+func materializeObjects[T any](ctx context.Context, store *primitives.KeyObjectStore[T], keys ObjKeyIter) iterator.Iterator[T] {
 	objIter := iterator.MapFailable(keys, func(key []byte) (T, error) {
 		var zero T
 		opt, err := store.Get(ctx, key)

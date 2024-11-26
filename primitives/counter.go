@@ -1,4 +1,4 @@
-package stores
+package primitives
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 
 	"github.com/sourcenetwork/raccoondb/errors"
 	"github.com/sourcenetwork/raccoondb/marshal"
+	"github.com/sourcenetwork/raccoondb/store"
 )
 
 // TODO maybe the base errors should return the key which caused the error?
@@ -17,7 +18,7 @@ func wrapCounterErr(method string, err error) error {
 }
 
 // NewCounterStore returns a new CounterStore
-func NewCounterStore(kv KVStore) CounterStore {
+func NewCounterStore(kv store.KVStore) CounterStore {
 	return CounterStore{
 		kv: kv,
 	}
@@ -26,7 +27,7 @@ func NewCounterStore(kv KVStore) CounterStore {
 // CounterStore abstracts a KVStore to create a store similar to a Program Counter
 // where each key has an int value associated to it
 type CounterStore struct {
-	kv KVStore
+	kv store.KVStore
 }
 
 // GetFree returns the next free number in the counter
@@ -99,7 +100,7 @@ func (r *CounterStore) Decrement(ctx context.Context, key []byte) (uint64, error
 	return counter, nil
 }
 
-func (r *CounterStore) DeleteCounter(ctx context.Context, key []byte) (RecordRemoved, error) {
+func (r *CounterStore) DeleteCounter(ctx context.Context, key []byte) (store.RecordRemoved, error) {
 	removed, err := r.kv.Delete(ctx, key)
 	if err != nil {
 		return false, wrapCounterErr("DeleteCounter", err)

@@ -14,9 +14,11 @@ func Skip[T any](n uint, iter Iterator[T]) {
 func Consume[T any](iter Iterator[T]) ([]T, []error) {
 	var errors []error
 	var items []T
-	for iter.Finished() {
+	for !iter.Finished() {
 		opt := iter.Value()
-		items = append(items, opt.GetValue())
+		if !opt.Empty() {
+			items = append(items, opt.GetValue())
+		}
 
 		err := iter.Next()
 		if err != nil {

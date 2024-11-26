@@ -7,6 +7,7 @@ go 1.21
 require (
 	github.com/cosmos/cosmos-db v1.0.0
 	github.com/google/btree v1.1.2
+	github.com/sourcenetwork/corekv v0.0.0-20240103085857-b4c7666ba155
 	github.com/stretchr/testify v1.8.4
 	google.golang.org/protobuf v1.31.0
 )
@@ -40,6 +41,7 @@ require (
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	github.com/spf13/cast v1.5.1 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
+	github.com/tidwall/btree v1.7.0 // indirect
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
 	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/sys v0.13.0 // indirect
