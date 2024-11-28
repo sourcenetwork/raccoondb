@@ -8,7 +8,7 @@ import "github.com/sourcenetwork/raccoondb/types"
 // Expected usage:
 //
 //	defer iter.Close()
-//	for iter.Finished() {
+//	for !iter.Finished() {
 //		val := iter.Value()
 //		err := iter.Next();
 //		if err != nil {
@@ -23,11 +23,11 @@ type Iterator[T any] interface {
 	// Next steps the iterator to its next value.
 	// It may error if for some reason the value cannot be produced.
 	// An error does not necessarily mean that the iterator is Finished.
-	// If the Iterator is Finished, Next is a Noop and returns no error
+	// If the Iterator is Finished, Next MUST be a Noop and return no error
 	Next() error
 
 	// Value returns the current value in the Iterator
-	// Should only return None if Next returned an error
+	// Should only return None if Next returned an error or if the Iterator is Finished
 	Value() types.Option[T]
 
 	// Finished indicates whether the Iterator scanned through all possible keys
@@ -40,6 +40,7 @@ type Iterator[T any] interface {
 	GetParams() IteratorOpt
 
 	// CurrentKey returns the key of the current element
+	// If Finished is true, return nil
 	CurrentKey() []byte
 }
 

@@ -51,7 +51,7 @@ func (s *KeyObjectStore[Obj]) Get(ctx context.Context, key []byte) (types.Option
 }
 
 // Set key with obj
-func (s *KeyObjectStore[Obj]) Set(ctx context.Context, key []byte, obj Obj) (store.RecordCreated, error) {
+func (s *KeyObjectStore[Obj]) Set(ctx context.Context, key []byte, obj Obj) (store.KeyCreated, error) {
 	bytes, err := s.marshaler.Marshal(&obj)
 	if err != nil {
 		return false, newErrKeyObject("Set", "marshaling object failed", err)
@@ -60,7 +60,7 @@ func (s *KeyObjectStore[Obj]) Set(ctx context.Context, key []byte, obj Obj) (sto
 }
 
 // Remove key from store
-func (s *KeyObjectStore[Obj]) Delete(ctx context.Context, key []byte) (store.RecordRemoved, error) {
+func (s *KeyObjectStore[Obj]) Delete(ctx context.Context, key []byte) (store.KeyRemoved, error) {
 	removed, err := s.kv.Delete(ctx, key)
 	if err != nil {
 		return false, newErrKeyObject("Delete", "deleting record", err)

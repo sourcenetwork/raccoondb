@@ -25,7 +25,7 @@ func NewTable[T any](kv store.KVStore, marshaler marshal.Marshaler[T]) *Table[T]
 
 	return &Table[T]{
 		objStore: &keyObjStore,
-		indexes:  make(map[string]ObjectIndexWriter[T]),
+		indexes:  make(map[string]IndexWriter[T]),
 		idxsKv:   indexesKv,
 	}
 }
@@ -36,11 +36,11 @@ func newTableErr(method string, msg string, err error) error {
 
 type Table[T any] struct {
 	objStore *primitives.KeyObjectStore[T]
-	indexes  map[string]ObjectIndexWriter[T]
+	indexes  map[string]IndexWriter[T]
 	idxsKv   store.KVStore
 }
 
-func (s *Table[T]) addIndexWriter(name string, writer ObjectIndexWriter[T]) error {
+func (s *Table[T]) addIndexWriter(name string, writer IndexWriter[T]) error {
 	_, exists := s.indexes[name]
 	if exists {
 		return ErrIndexExists
@@ -48,7 +48,7 @@ func (s *Table[T]) addIndexWriter(name string, writer ObjectIndexWriter[T]) erro
 	return nil
 }
 
-func (s *Table[T]) Delete(ctx context.Context, key []byte) (store.RecordRemoved, error) {
+func (s *Table[T]) Delete(ctx context.Context, key []byte) (store.KeyRemoved, error) {
 	opt, err := s.objStore.Get(ctx, key)
 	if err != nil {
 		return false, newTableErr("Delete", "fetching old record", err)
@@ -71,7 +71,7 @@ func (s *Table[T]) Delete(ctx context.Context, key []byte) (store.RecordRemoved,
 	return true, nil
 }
 
-func (s *Table[T]) Set(ctx context.Context, key []byte, obj *T) (store.RecordCreated, error) {
+func (s *Table[T]) Set(ctx context.Context, key []byte, obj *T) (store.KeyCreated, error) {
 	opt, err := s.objStore.Get(ctx, key)
 	if err != nil {
 		return false, newTableErr("Set", "fetching old record", err)
@@ -134,9 +134,13 @@ func (s *Table[T]) Has(ctx context.Context, key []byte) (bool, error) {
 }
 
 func (s *Table[T]) MaterializeKeyIter(ctx context.Context, keys iterator.BytesIterator) iterator.Iterator[T] {
-	return materializeObjects(ctx, s.objStore, keys)
+	return MaterializeObjects(ctx, s.objStore, keys)
 }
 
 func (s *Table[T]) UpateIndexes(ctx context.Context) error {
+	panic("TODO")
+}
+
+func (s *Table[T]) GetCatalogue(ctx context.Context) (Catalogue, error) {
 	panic("TODO")
 }

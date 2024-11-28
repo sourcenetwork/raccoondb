@@ -42,7 +42,7 @@ type FieldIndexStore struct {
 //
 // If value was previously inserted in a different bucket, it doesn't scan the index
 // to remove it, that is the callers responsability.
-func (s *FieldIndexStore) IndexValue(ctx context.Context, bucket []byte, item []byte) (store.RecordCreated, error) {
+func (s *FieldIndexStore) IndexValue(ctx context.Context, bucket []byte, item []byte) (store.KeyCreated, error) {
 	_, err := s.buckets.Set(ctx, bucket, bucket)
 	if err != nil {
 		return false, newFieldIndexErr("IndexValue", "creating bucket", err)
@@ -86,7 +86,7 @@ func (s *FieldIndexStore) IterateBucketItems(ctx context.Context, bucket []byte)
 // RemoveItem removes the given item from bucket
 // If bucket did not contain item, return RecordRemoved false
 // If the removed item was the last item from the bucket, removes the bucket
-func (s *FieldIndexStore) RemoveItem(ctx context.Context, bucket, item []byte) (store.RecordRemoved, error) {
+func (s *FieldIndexStore) RemoveItem(ctx context.Context, bucket, item []byte) (store.KeyRemoved, error) {
 	key := getIdxKey(bucket, item)
 	removed, err := s.idx.Delete(ctx, key)
 	if err != nil {

@@ -15,9 +15,3 @@ type IndexData struct {
 	BucketCount        uint64
 	IndexedObjectCount uint64
 }
-
-type AutoIncermenterMutations interface {
-}
-
-type TableMutations interface {
-}

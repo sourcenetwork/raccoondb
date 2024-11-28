@@ -7,7 +7,7 @@ import (
 	"github.com/sourcenetwork/corekv/memory"
 	"github.com/sourcenetwork/raccoondb/iterator"
 	"github.com/sourcenetwork/raccoondb/marshal"
-	"github.com/sourcenetwork/raccoondb/store"
+	"github.com/sourcenetwork/raccoondb/store/corekv"
 	"github.com/stretchr/testify/require"
 )
 
@@ -16,15 +16,16 @@ type Record struct {
 }
 
 func TestIndexedObjectStore_Example(t *testing.T) {
-	corekv := memory.NewDatastore(context.TODO())
-	kv := store.WrapCoreKV(corekv)
+	memcorekv := memory.NewDatastore(context.TODO())
+	kv := corekv.WrapCoreKV(memcorekv)
 
 	factory := func() Record { return Record{} }
 	table := NewTable(kv, marshal.NewJSONMarshaler(factory))
 
-	nameIdx, err := NewIndex(table, "name", func(record *Record) string {
-		return record.Name
-	},
+	nameIdx, err := NewIndex(
+		table,
+		"name",
+		func(record *Record) string { return record.Name },
 		&marshal.StringMarshaler{},
 	)
 	require.NoError(t, err)

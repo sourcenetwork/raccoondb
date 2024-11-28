@@ -100,7 +100,7 @@ func (r *CounterStore) Decrement(ctx context.Context, key []byte) (uint64, error
 	return counter, nil
 }
 
-func (r *CounterStore) DeleteCounter(ctx context.Context, key []byte) (store.RecordRemoved, error) {
+func (r *CounterStore) DeleteCounter(ctx context.Context, key []byte) (store.KeyRemoved, error) {
 	removed, err := r.kv.Delete(ctx, key)
 	if err != nil {
 		return false, wrapCounterErr("DeleteCounter", err)

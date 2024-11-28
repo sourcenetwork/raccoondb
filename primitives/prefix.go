@@ -52,7 +52,7 @@ func (kv *PrefixStore) Has(ctx context.Context, key []byte) (bool, error) {
 	return has, nil
 }
 
-func (kv *PrefixStore) Set(ctx context.Context, key, value []byte) (store.RecordCreated, error) {
+func (kv *PrefixStore) Set(ctx context.Context, key, value []byte) (store.KeyCreated, error) {
 	key = kv.joinKey(key)
 	created, err := kv.store.Set(ctx, key, value)
 	if err != nil {
@@ -61,7 +61,7 @@ func (kv *PrefixStore) Set(ctx context.Context, key, value []byte) (store.Record
 	return created, nil
 }
 
-func (kv *PrefixStore) Delete(ctx context.Context, key []byte) (store.RecordRemoved, error) {
+func (kv *PrefixStore) Delete(ctx context.Context, key []byte) (store.KeyRemoved, error) {
 	key = kv.joinKey(key)
 	deleted, err := kv.store.Delete(ctx, key)
 	if err != nil {

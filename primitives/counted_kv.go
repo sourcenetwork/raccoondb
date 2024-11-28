@@ -52,7 +52,7 @@ func (s *CountedKVStore) Get(ctx context.Context, key []byte) (types.Option[[]by
 }
 
 // Set key with obj
-func (s *CountedKVStore) Set(ctx context.Context, key []byte, value []byte) (store.RecordCreated, error) {
+func (s *CountedKVStore) Set(ctx context.Context, key []byte, value []byte) (store.KeyCreated, error) {
 	created, err := s.vals.Set(ctx, key, value)
 	if err != nil {
 		return false, fmt.Errorf("%w: set: setting record: %w", ErrCountedKVStore, err)
@@ -67,7 +67,7 @@ func (s *CountedKVStore) Set(ctx context.Context, key []byte, value []byte) (sto
 }
 
 // Remove key from store
-func (s *CountedKVStore) Delete(ctx context.Context, key []byte) (store.RecordRemoved, error) {
+func (s *CountedKVStore) Delete(ctx context.Context, key []byte) (store.KeyRemoved, error) {
 	removed, err := s.vals.Delete(ctx, key)
 	if err != nil {
 		return false, fmt.Errorf("%w: delete: deleting record: %w", ErrCountedKVStore, err)
