@@ -9,8 +9,6 @@ import (
 	"github.com/sourcenetwork/raccoondb/store"
 )
 
-// TODO maybe the base errors should return the key which caused the error?
-
 var ErrCounterStore = errors.New("counter store")
 
 func wrapCounterErr(method string, err error) error {
@@ -46,6 +44,15 @@ func (r *CounterStore) Get(ctx context.Context, key []byte) (uint64, error) {
 		return 0, wrapCounterErr("Get", err)
 	}
 	return val, nil
+}
+
+// Has return true if the counter exists for key
+func (r *CounterStore) Has(ctx context.Context, key []byte) (bool, error) {
+	has, err := r.kv.Has(ctx, key)
+	if err != nil {
+		return false, wrapCounterErr("Has", err)
+	}
+	return has, nil
 }
 
 // getValue return the Counter's current value - 0 if it hasn't been initialized

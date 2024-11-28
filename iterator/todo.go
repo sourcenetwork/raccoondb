@@ -1,5 +1,9 @@
 package iterator
 
+// TODO
+// iter from channel
+// iter to channel
+
 /*
 func SkipErrors[T any](itertor Iterator[T]) Iterator[T] {
 	return nil

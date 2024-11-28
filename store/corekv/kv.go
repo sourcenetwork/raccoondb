@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/sourcenetwork/corekv"
+	"github.com/sourcenetwork/corekv/memory"
 	"github.com/sourcenetwork/raccoondb/iterator"
 	"github.com/sourcenetwork/raccoondb/store"
 	"github.com/sourcenetwork/raccoondb/types"
@@ -16,6 +17,11 @@ var _ (store.KVStore) = (*storeAdapter)(nil)
 // wrapErr wraps an error with ErrCoreKV
 func wrapErr(err error) error {
 	return fmt.Errorf("%w: %w", ErrCoreKV, err)
+}
+
+func NewMemKV() store.KVStore {
+	mem := memory.NewDatastore(context.TODO())
+	return WrapCoreKV(mem)
 }
 
 // WrapCoreKV returns a raccoondb compliant KVStore from a corekv Store

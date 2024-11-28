@@ -1,3 +1,4 @@
+// package errors defines the top level error type for raccoondb
 package errors
 
 var _ error = (*RaccoonError)(nil)

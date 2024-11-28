@@ -5,22 +5,17 @@ import (
 	"github.com/sourcenetwork/raccoondb/types"
 )
 
+var _ Iterator[any] = (*SliceAdapter[any])(nil)
+
+// FromSlice returns wraps a slice with an iterator
+// which walks through the slice elems
 func FromSlice[T any](ts []T) Iterator[T] {
-	if len(ts) == 0 {
-		return &SliceAdapter[T]{
-			vals: ts,
-			idx:  0,
-			done: true,
-		}
-	}
 	return &SliceAdapter[T]{
 		vals: ts,
-		idx:  ^uint64(0),
-		done: false,
+		idx:  0,
+		done: len(ts) == 0,
 	}
 }
-
-var _ Iterator[any] = (*SliceAdapter[any])(nil)
 
 // SliceAdapter wraps a slice which implements the Iterator interface
 type SliceAdapter[T any] struct {

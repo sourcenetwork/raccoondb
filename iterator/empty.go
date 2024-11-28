@@ -10,6 +10,7 @@ type EmptyIterator[T any] struct {
 }
 
 // NewEmptyIterator returns an iterator which has no values
+// ie it's always Finished
 func NewEmptyIterator[T any](opt IteratorOpt) Iterator[T] {
 	return &EmptyIterator[T]{
 		opt: opt,

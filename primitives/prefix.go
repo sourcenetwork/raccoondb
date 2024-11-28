@@ -16,6 +16,10 @@ func newPrefixErr(method string, msg string, err error) error {
 	return fmt.Errorf("%w: %v: %v: %w", ErrPrefixStore, method, msg, err)
 }
 
+func newKeyNilErr(method string) error {
+	return fmt.Errorf("%w: %v: %w", ErrPrefixStore, method, store.ErrKeyNil)
+}
+
 func NewPrefixedKV(store store.KVStore, prefix []byte) store.KVStore {
 	return &PrefixStore{
 		store:  store,
@@ -35,6 +39,10 @@ type PrefixStore struct {
 func (kv *PrefixStore) joinKey(key []byte) []byte { return concatKey(kv.prefix, key) }
 
 func (kv *PrefixStore) Get(ctx context.Context, key []byte) (types.Option[[]byte], error) {
+	if key == nil {
+		return types.None[[]byte](), newKeyNilErr("Get")
+	}
+
 	key = kv.joinKey(key)
 	opt, err := kv.store.Get(ctx, key)
 	if err != nil {
@@ -44,6 +52,10 @@ func (kv *PrefixStore) Get(ctx context.Context, key []byte) (types.Option[[]byte
 }
 
 func (kv *PrefixStore) Has(ctx context.Context, key []byte) (bool, error) {
+	if key == nil {
+		return false, newKeyNilErr("Get")
+	}
+
 	key = kv.joinKey(key)
 	has, err := kv.store.Has(ctx, key)
 	if err != nil {
@@ -53,6 +65,10 @@ func (kv *PrefixStore) Has(ctx context.Context, key []byte) (bool, error) {
 }
 
 func (kv *PrefixStore) Set(ctx context.Context, key, value []byte) (store.KeyCreated, error) {
+	if key == nil {
+		return false, newKeyNilErr("Get")
+	}
+
 	key = kv.joinKey(key)
 	created, err := kv.store.Set(ctx, key, value)
 	if err != nil {
@@ -62,6 +78,10 @@ func (kv *PrefixStore) Set(ctx context.Context, key, value []byte) (store.KeyCre
 }
 
 func (kv *PrefixStore) Delete(ctx context.Context, key []byte) (store.KeyRemoved, error) {
+	if key == nil {
+		return false, newKeyNilErr("Get")
+	}
+
 	key = kv.joinKey(key)
 	deleted, err := kv.store.Delete(ctx, key)
 	if err != nil {

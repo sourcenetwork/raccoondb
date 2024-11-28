@@ -16,7 +16,11 @@ func Filter[T any](iter Iterator[T], predicate Predicate[T]) Iterator[T] {
 
 // While returns an iterator of items for as long as predicte is valid
 func While[T any](iter Iterator[T], predicate Predicate[T]) Iterator[T] {
-	return nil
+	return &whileIterator[T]{
+		inner:     iter,
+		predicate: predicate,
+		done:      false,
+	}
 }
 
 type filterIterator[T any] struct {

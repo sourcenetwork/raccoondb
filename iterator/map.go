@@ -7,6 +7,8 @@ import (
 	"github.com/sourcenetwork/raccoondb/types"
 )
 
+var _ Iterator[any] = (*MapIter[any, any])(nil)
+
 // ErrMapper models an error that happened when MapIter attempted to map an element
 var ErrMapper = errors.New("mapping failed")
 
@@ -38,8 +40,6 @@ func Map[T, U any](iterator Iterator[T], mapper Mapper[T, U]) Iterator[U] {
 		mapper: m,
 	}
 }
-
-var _ Iterator[any] = (*MapIter[any, any])(nil)
 
 type MapIter[T, U any] struct {
 	inner  Iterator[T]
@@ -82,13 +82,13 @@ func (i *MapIter[T, U]) Finished() bool {
 }
 
 func (i *MapIter[T, U]) Close() error {
-	return i.Close()
+	return i.inner.Close()
 }
 
 func (i *MapIter[T, U]) GetParams() IteratorOpt {
-	return i.GetParams()
+	return i.inner.GetParams()
 }
 
 func (i *MapIter[T, U]) CurrentKey() []byte {
-	return i.CurrentKey()
+	return i.inner.CurrentKey()
 }
