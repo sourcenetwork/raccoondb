@@ -11,9 +11,9 @@ import (
 
 var ErrFieldIndex = errors.New("FieldIndexStore")
 
-const bucketsPrefix = "buckets"
-const idxPrefix = "idx"
-const bucketCounterPrefix = "bucket_counter"
+const bucketsPrefix = "buckets/"
+const idxPrefix = "idx/"
+const bucketCounterPrefix = "bucket_counter/"
 
 func newFieldIndexErr(method string, msg string, err error) error {
 	return fmt.Errorf("%w: %v: %v: %w", ErrFieldIndex, method, msg, err)
@@ -75,7 +75,7 @@ func (s *FieldIndexStore) Has(ctx context.Context, bucket, item []byte) (bool, e
 
 // IterateBucketValues returns an iterator which returns all values contained in a bucket
 func (s *FieldIndexStore) IterateBucketItems(ctx context.Context, bucket []byte) (iterator.BytesIterator, error) {
-	bucketStore := NewPrefixedKV(s.idx, bucket)
+	bucketStore := NewPrefixedKV(s.idx, concatKey(bucket, []byte("/")))
 	iter, err := bucketStore.Iterate(ctx, iterator.NewOpenIterator())
 	if err != nil {
 		return nil, newFieldIndexErr("IterateBucketItems", "creating iterator", err)

@@ -158,22 +158,32 @@ func test_Iterate_ReturnsIteratorOverAllItems(t *testing.T, kv store.KVStore) {
 	iter, err := kv.Iterate(ctx, iterator.NewOpenIterator())
 	require.NoError(t, err)
 
-	for i := 0; !iter.Finished(); i++ {
-		wantData := []byte(testData[i])
+	require.Nil(t, iter.CurrentKey())
+	opt := iter.Value()
+	require.True(t, opt.Empty())
 
-		key := iter.CurrentKey()
-		require.Equal(t, string(wantData), string(key))
+	// initializes iterator
+	err = iter.Next(ctx)
+	require.NoError(t, err)
+
+	for i := 0; !iter.Finished(); i++ {
 		opt := iter.Value()
 		require.False(t, opt.Empty())
-		require.Equal(t, string(wantData), string(opt.GetValue()))
 
-		err := iter.Next()
+		want := testData[i]
+		require.Equal(t, want, string(iter.CurrentKey()))
+		require.Equal(t, want, string(opt.GetValue()))
+
+		err := iter.Next(ctx)
 		require.NoError(t, err)
 	}
 
 	require.Nil(t, iter.CurrentKey())
-	opt := iter.Value()
+	opt = iter.Value()
 	require.True(t, opt.Empty())
+
+	err = iter.Close()
+	require.NoError(t, err)
 }
 
 // RunSuite runs a test harness for an implementation of store.KVStore

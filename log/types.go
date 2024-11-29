@@ -1,6 +1,7 @@
 package log
 
-type Logger interface{}
+// TODO
+// type Logger interface{}
 
 // I could have a package level logger just to make things easier
 

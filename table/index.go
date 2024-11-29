@@ -35,15 +35,6 @@ func newIdxErr(method string, msg string, err error) error {
 	return fmt.Errorf("%w: %v: %v: %w", ErrObjectIndex, method, msg, err)
 }
 
-func newObjectIndexStore[T, I any](name string, idx *primitives.FieldIndexStore, extractor IndexValueExtractor[T, I], marshaler marshal.Marshaler[I]) *TableIndex[T, I] {
-	return &TableIndex[T, I]{
-		name:      name,
-		index:     idx,
-		extractor: extractor,
-		marshaler: marshaler,
-	}
-}
-
 type IndexWriter[T any] interface {
 	GetIndexName() string
 	IndexObject(ctx context.Context, key []byte, obj *T) (store.KeyCreated, error)

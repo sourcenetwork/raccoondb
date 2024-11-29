@@ -1,12 +1,13 @@
 package iterator
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
 
-func Test_FromSlice_IteratesOverAllValues(t *testing.T) {
+func Test_IterFromSlice_IteratesOverAllValues(t *testing.T) {
 	vals := []int{
 		1,
 		2,
@@ -15,9 +16,9 @@ func Test_FromSlice_IteratesOverAllValues(t *testing.T) {
 		5,
 	}
 
-	iter := FromSlice(vals)
+	iter := IterFromSlice(vals)
 
-	got, errs := Consume(iter)
+	got, errs := Consume(context.TODO(), iter)
 	require.Empty(t, errs)
 	require.Equal(t, vals, got)
 }

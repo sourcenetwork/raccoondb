@@ -24,7 +24,7 @@ func New(msg string) error {
 
 // As returns true and sets e.msg to err.msg
 // if err is an instances RaccoonError
-func (e *RaccoonError) As(err error) bool {
+func (e *RaccoonError) As(err any) bool {
 	cast, ok := err.(*RaccoonError)
 	if ok {
 		e.msg = cast.msg

@@ -52,7 +52,7 @@ func Test_CountedKV_DecrementsAfterRecordIsRemoved(t *testing.T) {
 	require.Equal(t, uint64(0), count)
 }
 
-func Test_CoutnedKV_Suite(t *testing.T) {
+func Test_CountedKV_Suite(t *testing.T) {
 	factory := func() store.KVStore {
 		kv := corekv.NewMemKV()
 		ckv := NewCountedKVStore(kv)

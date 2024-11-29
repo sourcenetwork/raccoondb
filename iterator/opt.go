@@ -3,21 +3,22 @@ package iterator
 // IteratorOpt configures the behavior of an Iterator
 // TODO improve this UX
 type IteratorOpt struct {
-	// Start represents the lower bound of iteration
+	// start represents the lower bound of iteration
 	// If nil will start at the smallest element
-	Start []byte
+	start []byte
 
-	// End represents the uper bound of iteration
+	// end represents the uper bound of iteration
 	// If nil will end at the largest element
-	End []byte
+	end []byte
 
-	// Prefix does a prefix iteration on the store
-	Prefix []byte
+	// prefix does a prefix iteration on the store
+	prefix []byte
 
-	// Reverse iterates the store backwards
-	Reverse bool
+	// reverse iterates the store backwards
+	reverse bool
 }
 
+// NewOpenIterator returns an Iterator Option which steps through all keys in a store
 func NewOpenIterator() IteratorOpt {
 	return IteratorOpt{}
 }

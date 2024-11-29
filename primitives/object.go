@@ -51,8 +51,8 @@ func (s *KeyObjectStore[Obj]) Get(ctx context.Context, key []byte) (types.Option
 }
 
 // Set key with obj
-func (s *KeyObjectStore[Obj]) Set(ctx context.Context, key []byte, obj Obj) (store.KeyCreated, error) {
-	bytes, err := s.marshaler.Marshal(&obj)
+func (s *KeyObjectStore[Obj]) Set(ctx context.Context, key []byte, obj *Obj) (store.KeyCreated, error) {
+	bytes, err := s.marshaler.Marshal(obj)
 	if err != nil {
 		return false, newErrKeyObject("Set", "marshaling object failed", err)
 	}

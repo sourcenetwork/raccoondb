@@ -1,25 +1,29 @@
 package iterator
 
-import "github.com/sourcenetwork/raccoondb/types"
+import (
+	"context"
 
-var _ Iterator[any] = (*EmptyIterator[any])(nil)
+	"github.com/sourcenetwork/raccoondb/types"
+)
 
-// EmptyIterator models an iterator which returns no values
-type EmptyIterator[T any] struct {
+var _ Iterator[any] = (*emptyIterator[any])(nil)
+
+// emptyIterator models an iterator which returns no values
+type emptyIterator[T any] struct {
 	opt IteratorOpt
 }
 
 // NewEmptyIterator returns an iterator which has no values
 // ie it's always Finished
 func NewEmptyIterator[T any](opt IteratorOpt) Iterator[T] {
-	return &EmptyIterator[T]{
+	return &emptyIterator[T]{
 		opt: opt,
 	}
 }
 
-func (i *EmptyIterator[T]) Next() error            { return nil }
-func (i *EmptyIterator[T]) Value() types.Option[T] { return types.None[T]() }
-func (i *EmptyIterator[T]) CurrentKey() []byte     { return nil }
-func (i *EmptyIterator[T]) Finished() bool         { return true }
-func (i *EmptyIterator[T]) Close() error           { return nil }
-func (i *EmptyIterator[T]) GetParams() IteratorOpt { return i.opt }
+func (i *emptyIterator[T]) Next(_ context.Context) error { return nil }
+func (i *emptyIterator[T]) Value() types.Option[T]       { return types.None[T]() }
+func (i *emptyIterator[T]) CurrentKey() []byte           { return nil }
+func (i *emptyIterator[T]) Finished() bool               { return true }
+func (i *emptyIterator[T]) Close() error                 { return nil }
+func (i *emptyIterator[T]) GetParams() IteratorOpt       { return i.opt }

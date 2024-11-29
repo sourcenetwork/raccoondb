@@ -7,11 +7,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_errorsAs_ReturnsTrueForRaccoonError(t *testing.T) {
+func Test_ErrorsAs_ReturnsTrueForRaccoonError(t *testing.T) {
 	err := New("test error")
 
-	raccoonErr := RaccoonError{}
-	ok := errors.As(err, &raccoonErr)
+	var rerr *RaccoonError
+	ok := errors.As(err, &rerr)
 
 	require.True(t, ok)
 }

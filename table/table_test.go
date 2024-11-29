@@ -8,6 +8,7 @@ import (
 	"github.com/sourcenetwork/raccoondb/iterator"
 	"github.com/sourcenetwork/raccoondb/marshal"
 	"github.com/sourcenetwork/raccoondb/store/corekv"
+	"github.com/sourcenetwork/raccoondb/store/test"
 	"github.com/stretchr/testify/require"
 )
 
@@ -38,8 +39,9 @@ func TestIndexedObjectStore_Example(t *testing.T) {
 	bucket := "bob"
 	iter, err := nameIdx.IterateKeys(ctx, &bucket)
 	require.NoError(t, err)
+	test.DumpStore(t, kv)
 
-	names, errs := iterator.Consume(iter)
+	names, errs := iterator.Consume(ctx, iter)
 	require.Empty(t, errs)
 
 	require.Equal(t, []byte("a"), names[0])

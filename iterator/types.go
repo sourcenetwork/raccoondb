@@ -1,30 +1,52 @@
 package iterator
 
-import "github.com/sourcenetwork/raccoondb/types"
+import (
+	"context"
+
+	"github.com/sourcenetwork/raccoondb/types"
+)
 
 // Iterator models a stateful traversing through some sequence of elements
 // indexed by a byte sequence key
 //
+// A new iterator should start "out of bound", meanign it does not perform
+// any IO until Next() is called for the first time.
+// The iterator ends once it steps out of bound.
+//
 // Expected usage:
 //
-//	defer iter.Close()
+// defer iter.Close()
+// err := iter.Next()
+// if err != nil { return err }
+//
 //	for !iter.Finished() {
-//		val := iter.Value()
-//		err := iter.Next();
-//		if err != nil {
-//			return err
-//		}
+//	  _ = iter.Value()
+//	  err := iter.Next();
+//	  if err != nil { return err }
 //	}
 //
-// Meaning that the iterator starts ready to supply a value,
-// next moves it forward for as long as values are valid,
-// and the final next call moves it to out of bounds where it is no longer valid and finished turns true
+//		or:
+//
+// defer iter.Close()
+//
+//	for {
+//	  err := iter.Next()
+//	  if err != nil {
+//	    return err
+//	  }
+//	  if iter.Finished() {
+//	    break
+//	  }
+//	  _ = iter.Value()
+//	}
 type Iterator[T any] interface {
 	// Next steps the iterator to its next value.
-	// It may error if for some reason the value cannot be produced.
-	// An error does not necessarily mean that the iterator is Finished.
-	// If the Iterator is Finished, Next MUST be a Noop and return no error
-	Next() error
+	// It may return an error if it could not produce a value.
+	// The Iterator will yield values until Finished == true,
+	// once an Iteartor is finished, Next MUST be a Noop and return no error.
+	//
+	// Note: An error does not necessarily mean that the Iterator is Finished.
+	Next(ctx context.Context) error
 
 	// Value returns the current value in the Iterator
 	// Should only return None if Next returned an error or if the Iterator is Finished

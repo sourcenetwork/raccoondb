@@ -12,17 +12,23 @@ var _ (iterator.Iterator[[]byte]) = (*iterAdapter)(nil)
 
 // iterAdapter adapts a corekv Iterator into a racoon iterator
 type iterAdapter struct {
-	iter   corekv.Iterator
-	params iterator.IteratorOpt
+	iter        corekv.Iterator
+	params      iterator.IteratorOpt
+	initialized bool
 }
 
-func (i *iterAdapter) Next() error {
+func (i *iterAdapter) Next(_ context.Context) error {
+	if !i.initialized {
+		i.initialized = true
+		return nil
+	}
+
 	i.iter.Next()
 	return nil
 }
 
 func (i *iterAdapter) Value() types.Option[[]byte] {
-	if i.Finished() {
+	if i.Finished() || !i.initialized {
 		return types.None[[]byte]()
 	}
 
@@ -50,7 +56,7 @@ func (i *iterAdapter) GetParams() iterator.IteratorOpt {
 }
 
 func (i *iterAdapter) CurrentKey() []byte {
-	if i.Finished() {
+	if i.Finished() || !i.initialized {
 		return nil
 	}
 	return i.iter.Key()

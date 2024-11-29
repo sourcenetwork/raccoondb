@@ -15,8 +15,8 @@ import (
 var ErrIndexedObjectStore = errors.New("indexed object store")
 var ErrIndexExists = errors.New("index already defined")
 
-const objsPrefix = "objs"
-const idxsPrefix = "indexes"
+const objsPrefix = "objs/"
+const idxsPrefix = "indexes/"
 
 func NewTable[T any](kv store.KVStore, marshaler marshal.Marshaler[T]) *Table[T] {
 	indexesKv := primitives.NewPrefixedKV(kv, []byte(idxsPrefix))
@@ -84,7 +84,7 @@ func (s *Table[T]) Set(ctx context.Context, key []byte, obj *T) (store.KeyCreate
 		}
 	}
 
-	result, err := s.objStore.Set(ctx, key, *obj)
+	result, err := s.objStore.Set(ctx, key, obj)
 	if err != nil {
 		return false, newTableErr("Set", "setting record", err)
 	}

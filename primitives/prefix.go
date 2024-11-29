@@ -111,8 +111,8 @@ func (i *prefixStoreIterator) Finished() bool {
 	return i.iter.Finished()
 }
 
-func (i *prefixStoreIterator) Next() error {
-	return i.iter.Next()
+func (i *prefixStoreIterator) Next(ctx context.Context) error {
+	return i.iter.Next(ctx)
 }
 
 // Key strips prefix from Key

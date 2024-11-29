@@ -18,15 +18,15 @@ var ErrCountedKVStore = errors.New("CounterKVStore error")
 
 var _ store.KVStore = (*CountedKVStore)(nil)
 
-const countPrefix = "count"
-const valsPrefix = "vals"
+const countPrefix = "count/"
+const valsPrefix = "vals/"
 const counterKey = "i"
 
 // Return a KeyObjectStore from a store.KVStore using marshaler to (un)marshal objects.
 func NewCountedKVStore(kv store.KVStore) *CountedKVStore {
-	countStore := NewPrefixedKV(kv, []byte(countPrefix))
-	counter := NewCounterStore(countStore)
 	vals := NewPrefixedKV(kv, []byte(valsPrefix))
+	countPrefixed := NewPrefixedKV(kv, []byte(countPrefix))
+	counter := NewCounterStore(countPrefixed)
 
 	return &CountedKVStore{
 		baseStore: kv,

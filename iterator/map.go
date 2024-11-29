@@ -1,13 +1,14 @@
 package iterator
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/sourcenetwork/raccoondb/errors"
 	"github.com/sourcenetwork/raccoondb/types"
 )
 
-var _ Iterator[any] = (*MapIter[any, any])(nil)
+var _ Iterator[any] = (*mapIter[any, any])(nil)
 
 // ErrMapper models an error that happened when MapIter attempted to map an element
 var ErrMapper = errors.New("mapping failed")
@@ -24,7 +25,7 @@ type Mapper[T, U any] func(T) U
 // Value() will return None.
 // Then the Iter will move to the next element
 func MapFailable[T, U any](iterator Iterator[T], mapper FailableMapper[T, U]) Iterator[U] {
-	return &MapIter[T, U]{
+	return &mapIter[T, U]{
 		inner:  iterator,
 		mapper: mapper,
 	}
@@ -35,21 +36,22 @@ func Map[T, U any](iterator Iterator[T], mapper Mapper[T, U]) Iterator[U] {
 	m := func(t T) (U, error) {
 		return mapper(t), nil
 	}
-	return &MapIter[T, U]{
+	return &mapIter[T, U]{
 		inner:  iterator,
 		mapper: m,
 	}
 }
 
-type MapIter[T, U any] struct {
+// mapIter is an iterator which applies a mapping function for every element in the inner iter
+type mapIter[T, U any] struct {
 	inner  Iterator[T]
 	mapper FailableMapper[T, U]
 	mapErr error
 	val    types.Option[U]
 }
 
-func (i *MapIter[T, U]) Next() error {
-	err := i.inner.Next()
+func (i *mapIter[T, U]) Next(ctx context.Context) error {
+	err := i.inner.Next(ctx)
 	if err != nil {
 		i.val = types.None[U]()
 		return err
@@ -73,22 +75,22 @@ func (i *MapIter[T, U]) Next() error {
 	return nil
 }
 
-func (i *MapIter[T, U]) Value() types.Option[U] {
+func (i *mapIter[T, U]) Value() types.Option[U] {
 	return i.val
 }
 
-func (i *MapIter[T, U]) Finished() bool {
+func (i *mapIter[T, U]) Finished() bool {
 	return i.inner.Finished()
 }
 
-func (i *MapIter[T, U]) Close() error {
+func (i *mapIter[T, U]) Close() error {
 	return i.inner.Close()
 }
 
-func (i *MapIter[T, U]) GetParams() IteratorOpt {
+func (i *mapIter[T, U]) GetParams() IteratorOpt {
 	return i.inner.GetParams()
 }
 
-func (i *MapIter[T, U]) CurrentKey() []byte {
+func (i *mapIter[T, U]) CurrentKey() []byte {
 	return i.inner.CurrentKey()
 }
