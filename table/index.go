@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/sourcenetwork/raccoondb/errors"
-	"github.com/sourcenetwork/raccoondb/iterator"
-	"github.com/sourcenetwork/raccoondb/marshal"
-	"github.com/sourcenetwork/raccoondb/primitives"
-	"github.com/sourcenetwork/raccoondb/store"
+	"github.com/sourcenetwork/raccoondb/v2/errors"
+	"github.com/sourcenetwork/raccoondb/v2/iterator"
+	"github.com/sourcenetwork/raccoondb/v2/marshal"
+	"github.com/sourcenetwork/raccoondb/v2/primitives"
+	"github.com/sourcenetwork/raccoondb/v2/store"
 )
 
 type IndexValueExtractor[T, I any] func(*T) I

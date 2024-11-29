@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/sourcenetwork/raccoondb/iterator"
-	"github.com/sourcenetwork/raccoondb/primitives"
+	"github.com/sourcenetwork/raccoondb/v2/iterator"
+	"github.com/sourcenetwork/raccoondb/v2/primitives"
 )
 
 func MaterializeObjects[T any](ctx context.Context, store *primitives.KeyObjectStore[T], keys ObjKeyIter) iterator.Iterator[T] {

@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/sourcenetwork/raccoondb/errors"
+	"github.com/sourcenetwork/raccoondb/v2/errors"
 	"github.com/stretchr/testify/require"
 )
 

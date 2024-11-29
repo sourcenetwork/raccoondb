@@ -5,10 +5,10 @@ import (
 	"testing"
 
 	"github.com/sourcenetwork/corekv/memory"
-	"github.com/sourcenetwork/raccoondb/iterator"
-	"github.com/sourcenetwork/raccoondb/marshal"
-	"github.com/sourcenetwork/raccoondb/store/corekv"
-	"github.com/sourcenetwork/raccoondb/store/test"
+	"github.com/sourcenetwork/raccoondb/v2/iterator"
+	"github.com/sourcenetwork/raccoondb/v2/marshal"
+	"github.com/sourcenetwork/raccoondb/v2/store/corekv"
+	"github.com/sourcenetwork/raccoondb/v2/store/test"
 	"github.com/stretchr/testify/require"
 )
 

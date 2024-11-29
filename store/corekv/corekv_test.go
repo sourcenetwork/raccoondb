@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/sourcenetwork/corekv/memory"
-	"github.com/sourcenetwork/raccoondb/store"
-	"github.com/sourcenetwork/raccoondb/store/test"
+	"github.com/sourcenetwork/raccoondb/v2/store"
+	"github.com/sourcenetwork/raccoondb/v2/store/test"
 )
 
 func Test_corekv_RunSuite(t *testing.T) {

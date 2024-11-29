@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sourcenetwork/raccoondb/iterator"
-	"github.com/sourcenetwork/raccoondb/store"
+	"github.com/sourcenetwork/raccoondb/v2/iterator"
+	"github.com/sourcenetwork/raccoondb/v2/store"
 	"github.com/stretchr/testify/require"
 )
 

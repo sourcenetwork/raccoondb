@@ -3,8 +3,8 @@ package store
 import (
 	"context"
 
-	"github.com/sourcenetwork/raccoondb/iterator"
-	"github.com/sourcenetwork/raccoondb/types"
+	"github.com/sourcenetwork/raccoondb/v2/iterator"
+	"github.com/sourcenetwork/raccoondb/v2/types"
 )
 
 // KeyRemoved is a flag indicating whether a Key was removed during a Delete call

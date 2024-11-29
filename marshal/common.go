@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/sourcenetwork/raccoondb/errors"
+	"github.com/sourcenetwork/raccoondb/v2/errors"
 )
 
 var _ Marshaler[uint64] = UIntMarshaler{}

@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/sourcenetwork/raccoondb/iterator"
-	"github.com/sourcenetwork/raccoondb/store/corekv"
-	"github.com/sourcenetwork/raccoondb/store/test"
+	"github.com/sourcenetwork/raccoondb/v2/iterator"
+	"github.com/sourcenetwork/raccoondb/v2/store/corekv"
+	"github.com/sourcenetwork/raccoondb/v2/store/test"
 	"github.com/stretchr/testify/require"
 )
 

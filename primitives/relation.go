@@ -4,7 +4,7 @@ package primitives
 import (
 	"context"
 
-	"github.com/sourcenetwork/raccoondb/iterator"
+	"github.com/sourcenetwork/raccoondb/v2/iterator"
 )
 
 // maybe a relation store which keeps an index of related keys in both directions

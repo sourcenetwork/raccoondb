@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/sourcenetwork/corekv"
-	"github.com/sourcenetwork/raccoondb/iterator"
-	"github.com/sourcenetwork/raccoondb/types"
+	"github.com/sourcenetwork/raccoondb/v2/iterator"
+	"github.com/sourcenetwork/raccoondb/v2/types"
 )
 
 var _ (iterator.Iterator[[]byte]) = (*iterAdapter)(nil)

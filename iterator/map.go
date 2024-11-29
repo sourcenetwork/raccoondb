@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/sourcenetwork/raccoondb/errors"
-	"github.com/sourcenetwork/raccoondb/types"
+	"github.com/sourcenetwork/raccoondb/v2/errors"
+	"github.com/sourcenetwork/raccoondb/v2/types"
 )
 
 var _ Iterator[any] = (*mapIter[any, any])(nil)

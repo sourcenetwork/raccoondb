@@ -3,10 +3,10 @@ package table
 import (
 	"context"
 
-	"github.com/sourcenetwork/raccoondb/marshal"
-	"github.com/sourcenetwork/raccoondb/primitives"
-	"github.com/sourcenetwork/raccoondb/store"
-	"github.com/sourcenetwork/raccoondb/types"
+	"github.com/sourcenetwork/raccoondb/v2/marshal"
+	"github.com/sourcenetwork/raccoondb/v2/primitives"
+	"github.com/sourcenetwork/raccoondb/v2/store"
+	"github.com/sourcenetwork/raccoondb/v2/types"
 )
 
 const counterKey string = "id"

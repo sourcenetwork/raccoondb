@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"context"
 
-	"github.com/sourcenetwork/raccoondb/marshal"
-	"github.com/sourcenetwork/raccoondb/types"
-	"github.com/sourcenetwork/raccoondb/utils"
+	"github.com/sourcenetwork/raccoondb/v2/marshal"
+	"github.com/sourcenetwork/raccoondb/v2/types"
+	"github.com/sourcenetwork/raccoondb/v2/utils"
 )
 
 var _ Iterator[any] = (*PairsIter[any])(nil)

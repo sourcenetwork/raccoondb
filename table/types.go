@@ -1,6 +1,6 @@
 package table
 
-import "github.com/sourcenetwork/raccoondb/iterator"
+import "github.com/sourcenetwork/raccoondb/v2/iterator"
 
 // ObjKeyIter represents an iterator whose values are object keys
 type ObjKeyIter iterator.BytesIterator

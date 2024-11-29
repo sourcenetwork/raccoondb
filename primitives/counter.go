@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/sourcenetwork/raccoondb/errors"
-	"github.com/sourcenetwork/raccoondb/marshal"
-	"github.com/sourcenetwork/raccoondb/store"
+	"github.com/sourcenetwork/raccoondb/v2/errors"
+	"github.com/sourcenetwork/raccoondb/v2/marshal"
+	"github.com/sourcenetwork/raccoondb/v2/store"
 )
 
 var ErrCounterStore = errors.New("counter store")

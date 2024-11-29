@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/sourcenetwork/raccoondb/errors"
-	"github.com/sourcenetwork/raccoondb/iterator"
-	"github.com/sourcenetwork/raccoondb/store"
+	"github.com/sourcenetwork/raccoondb/v2/errors"
+	"github.com/sourcenetwork/raccoondb/v2/iterator"
+	"github.com/sourcenetwork/raccoondb/v2/store"
 )
 
 var ErrFieldIndex = errors.New("FieldIndexStore")

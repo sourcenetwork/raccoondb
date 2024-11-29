@@ -7,9 +7,9 @@ import (
 
 	"github.com/sourcenetwork/corekv"
 	"github.com/sourcenetwork/corekv/memory"
-	"github.com/sourcenetwork/raccoondb/iterator"
-	"github.com/sourcenetwork/raccoondb/store"
-	"github.com/sourcenetwork/raccoondb/types"
+	"github.com/sourcenetwork/raccoondb/v2/iterator"
+	"github.com/sourcenetwork/raccoondb/v2/store"
+	"github.com/sourcenetwork/raccoondb/v2/types"
 )
 
 var _ (store.KVStore) = (*storeAdapter)(nil)

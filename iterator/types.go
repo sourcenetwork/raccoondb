@@ -3,7 +3,7 @@ package iterator
 import (
 	"context"
 
-	"github.com/sourcenetwork/raccoondb/types"
+	"github.com/sourcenetwork/raccoondb/v2/types"
 )
 
 // Iterator models a stateful traversing through some sequence of elements

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 
-	"github.com/sourcenetwork/raccoondb/types"
+	"github.com/sourcenetwork/raccoondb/v2/types"
 )
 
 var _ Iterator[any] = (*PrefixIterator[any])(nil)

@@ -3,7 +3,7 @@ package iterator
 import (
 	"context"
 
-	"github.com/sourcenetwork/raccoondb/types"
+	"github.com/sourcenetwork/raccoondb/v2/types"
 )
 
 var _ Iterator[any] = (*emptyIterator[any])(nil)
