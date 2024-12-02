@@ -64,7 +64,7 @@ func (a *storeAdapter) Has(ctx context.Context, key []byte) (bool, error) {
 	return has, nil
 }
 
-func (a *storeAdapter) Iterate(ctx context.Context, opt iterator.IteratorOpt) (iterator.BytesIterator, error) {
+func (a *storeAdapter) Iterate(ctx context.Context, opt iterator.IteratorOpt) (iterator.Iterator[[]byte], error) {
 	// TODO fix opts
 	iter := a.kv.Iterator(ctx, corekv.IterOptions{})
 	return &iterAdapter{

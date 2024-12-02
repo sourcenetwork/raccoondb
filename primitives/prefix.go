@@ -27,7 +27,7 @@ func NewPrefixedKV(store store.KVStore, prefix []byte) store.KVStore {
 	}
 }
 
-var _ iterator.BytesIterator = (*prefixStoreIterator)(nil)
+var _ iterator.Iterator[[]byte] = (*prefixStoreIterator)(nil)
 var _ store.KVStore = (*PrefixStore)(nil)
 
 // PrefixStore implements raccoon's store.KVStore to a store.KVStore by wrapping its methods with a global prefix
@@ -90,7 +90,7 @@ func (kv *PrefixStore) Delete(ctx context.Context, key []byte) (store.KeyRemoved
 	return deleted, nil
 }
 
-func (kv *PrefixStore) Iterate(ctx context.Context, opt iterator.IteratorOpt) (iterator.BytesIterator, error) {
+func (kv *PrefixStore) Iterate(ctx context.Context, opt iterator.IteratorOpt) (iterator.Iterator[[]byte], error) {
 	iter, err := kv.store.Iterate(ctx, opt)
 	if err != nil {
 		return nil, newPrefixErr("Iterator", "creating iterator", err)

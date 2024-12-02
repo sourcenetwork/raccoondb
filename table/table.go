@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/sourcenetwork/raccoondb/v2/errors"
 	"github.com/sourcenetwork/raccoondb/v2/iterator"
 	"github.com/sourcenetwork/raccoondb/v2/marshal"
 	"github.com/sourcenetwork/raccoondb/v2/primitives"
@@ -12,11 +11,7 @@ import (
 	"github.com/sourcenetwork/raccoondb/v2/types"
 )
 
-var ErrIndexedObjectStore = errors.New("indexed object store")
-var ErrIndexExists = errors.New("index already defined")
-
-const objsPrefix = "objs/"
-const idxsPrefix = "indexes/"
+var _ store.KVStore = (*Table[[]byte])(nil)
 
 func NewTable[T any](kv store.KVStore, marshaler marshal.Marshaler[T]) *Table[T] {
 	indexesKv := primitives.NewPrefixedKV(kv, []byte(idxsPrefix))
@@ -45,6 +40,7 @@ func (s *Table[T]) addIndexWriter(name string, writer IndexWriter[T]) error {
 	if exists {
 		return ErrIndexExists
 	}
+	s.indexes[name] = writer
 	return nil
 }
 
@@ -71,7 +67,7 @@ func (s *Table[T]) Delete(ctx context.Context, key []byte) (store.KeyRemoved, er
 	return true, nil
 }
 
-func (s *Table[T]) Set(ctx context.Context, key []byte, obj *T) (store.KeyCreated, error) {
+func (s *Table[T]) Set(ctx context.Context, key []byte, obj T) (store.KeyCreated, error) {
 	opt, err := s.objStore.Get(ctx, key)
 	if err != nil {
 		return false, newTableErr("Set", "fetching old record", err)
@@ -90,7 +86,7 @@ func (s *Table[T]) Set(ctx context.Context, key []byte, obj *T) (store.KeyCreate
 	}
 
 	for _, idx := range s.indexes {
-		_, err := idx.IndexObject(ctx, key, obj)
+		_, err := idx.IndexObject(ctx, key, &obj)
 		if err != nil {
 			return false, newTableErr("Set", "setting index", err)
 		}
@@ -133,7 +129,7 @@ func (s *Table[T]) Has(ctx context.Context, key []byte) (bool, error) {
 	return has, nil
 }
 
-func (s *Table[T]) MaterializeKeyIter(ctx context.Context, keys iterator.BytesIterator) iterator.Iterator[T] {
+func (s *Table[T]) MaterializeKeyIter(ctx context.Context, keys ObjKeyIter) iterator.Iterator[T] {
 	return MaterializeObjects(ctx, s.objStore, keys)
 }
 

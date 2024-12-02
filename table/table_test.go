@@ -7,6 +7,7 @@ import (
 	"github.com/sourcenetwork/corekv/memory"
 	"github.com/sourcenetwork/raccoondb/v2/iterator"
 	"github.com/sourcenetwork/raccoondb/v2/marshal"
+	"github.com/sourcenetwork/raccoondb/v2/store"
 	"github.com/sourcenetwork/raccoondb/v2/store/corekv"
 	"github.com/sourcenetwork/raccoondb/v2/store/test"
 	"github.com/stretchr/testify/require"
@@ -14,6 +15,16 @@ import (
 
 type Record struct {
 	Name string `json:"name"`
+}
+
+func Test_Table_Suite(t *testing.T) {
+	factory := func() store.KVStore {
+		m := marshal.BytesMarshaler{}
+		kv := corekv.NewMemKV()
+		t := NewTable(kv, m)
+		return t
+	}
+	test.RunSuite(t, factory)
 }
 
 func TestIndexedObjectStore_Example(t *testing.T) {
@@ -32,7 +43,7 @@ func TestIndexedObjectStore_Example(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx := context.TODO()
-	created, err := table.Set(ctx, []byte("a"), &Record{"bob"})
+	created, err := table.Set(ctx, []byte("a"), Record{"bob"})
 	require.NoError(t, err)
 	require.True(t, bool(created))
 

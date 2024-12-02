@@ -18,7 +18,7 @@ var ErrObjectIndex = errors.New("ObjectIndex")
 func NewIndex[T, I any](table *Table[T], name string, extractor IndexValueExtractor[T, I], marshaler marshal.Marshaler[I]) (IndexReader[T, I], error) {
 	idxKv := primitives.NewPrefixedKV(table.idxsKv, []byte(name))
 	fieldIdx := primitives.NewFieldIndexStore(idxKv)
-	idx := &TableIndex[T, I]{
+	idx := &tableIndex[T, I]{
 		name:      name,
 		index:     &fieldIdx,
 		extractor: extractor,
@@ -50,9 +50,9 @@ type IndexReader[T, I any] interface {
 	GetIndexCount(ctx context.Context) (uint64, error)
 }
 
-var _ IndexWriter[any] = (*TableIndex[any, any])(nil)
+var _ IndexWriter[any] = (*tableIndex[any, any])(nil)
 
-type TableIndex[T any, I any] struct {
+type tableIndex[T any, I any] struct {
 	name      string
 	index     *primitives.FieldIndexStore
 	extractor IndexValueExtractor[T, I]
@@ -60,7 +60,7 @@ type TableIndex[T any, I any] struct {
 }
 
 // Iterate returns an iterator which steps though the object keys indexed in a given bucket / value
-func (i *TableIndex[T, I]) IterateKeys(ctx context.Context, bucket *I) (ObjKeyIter, error) {
+func (i *tableIndex[T, I]) IterateKeys(ctx context.Context, bucket *I) (ObjKeyIter, error) {
 	bytes, err := i.marshaler.Marshal(bucket)
 	if err != nil {
 		return nil, newIdxErr("IterateKeys", "marshaling bucket", err)
@@ -74,7 +74,7 @@ func (i *TableIndex[T, I]) IterateKeys(ctx context.Context, bucket *I) (ObjKeyIt
 }
 
 // IterateValues returns an iterator which steps though the buckets / values in the index
-func (i *TableIndex[T, I]) IterateBuckets(ctx context.Context) (iterator.Iterator[I], error) {
+func (i *tableIndex[T, I]) IterateBuckets(ctx context.Context) (iterator.Iterator[I], error) {
 	iter, err := i.index.IterateBuckets(ctx)
 	if err != nil {
 		return nil, newIdxErr("IterateValues", "creating iterator", err)
@@ -92,7 +92,7 @@ func (i *TableIndex[T, I]) IterateBuckets(ctx context.Context) (iterator.Iterato
 }
 
 // GetBucketCount returns the number of buckets / values the index contains
-func (i *TableIndex[T, I]) GetBucketCount(ctx context.Context) (uint64, error) {
+func (i *tableIndex[T, I]) GetBucketCount(ctx context.Context) (uint64, error) {
 	count, err := i.index.GetBucketCount(ctx)
 	if err != nil {
 		return 0, newIdxErr("GetBucketCount", "getting count", err)
@@ -101,7 +101,7 @@ func (i *TableIndex[T, I]) GetBucketCount(ctx context.Context) (uint64, error) {
 }
 
 // GetIndexCount returns the count of the number of objects that have been indexed
-func (i *TableIndex[T, I]) GetIndexCount(ctx context.Context) (uint64, error) {
+func (i *tableIndex[T, I]) GetIndexCount(ctx context.Context) (uint64, error) {
 	count, err := i.index.GetIndexedItemsCount(ctx)
 	if err != nil {
 		return 0, newIdxErr("GetIndexCount", "getting count", err)
@@ -110,7 +110,7 @@ func (i *TableIndex[T, I]) GetIndexCount(ctx context.Context) (uint64, error) {
 }
 
 // IndexObject indexes the given object using the given key as record id
-func (i *TableIndex[T, I]) IndexObject(ctx context.Context, key []byte, obj *T) (store.KeyCreated, error) {
+func (i *tableIndex[T, I]) IndexObject(ctx context.Context, key []byte, obj *T) (store.KeyCreated, error) {
 	val := i.extractor(obj)
 	bucket, err := i.marshaler.Marshal(&val)
 	if err != nil {
@@ -124,7 +124,7 @@ func (i *TableIndex[T, I]) IndexObject(ctx context.Context, key []byte, obj *T) 
 	return created, nil
 }
 
-func (i *TableIndex[T, I]) UpdateIndex(ctx context.Context, key []byte, old *T, new *T) error {
+func (i *tableIndex[T, I]) UpdateIndex(ctx context.Context, key []byte, old *T, new *T) error {
 	val := i.extractor(old)
 	bucket, err := i.marshaler.Marshal(&val)
 	if err != nil {
@@ -143,7 +143,7 @@ func (i *TableIndex[T, I]) UpdateIndex(ctx context.Context, key []byte, old *T, 
 	return nil
 }
 
-func (i *TableIndex[T, I]) UnindexObject(ctx context.Context, key []byte, obj *T) (store.KeyRemoved, error) {
+func (i *tableIndex[T, I]) UnindexObject(ctx context.Context, key []byte, obj *T) (store.KeyRemoved, error) {
 	val := i.extractor(obj)
 	bucket, err := i.marshaler.Marshal(&val)
 	if err != nil {
@@ -157,6 +157,6 @@ func (i *TableIndex[T, I]) UnindexObject(ctx context.Context, key []byte, obj *T
 	return removed, nil
 }
 
-func (i *TableIndex[T, I]) GetIndexName() string {
+func (i *tableIndex[T, I]) GetIndexName() string {
 	return i.name
 }

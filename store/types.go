@@ -23,7 +23,7 @@ type ReadStore interface {
 	Has(ctx context.Context, key []byte) (bool, error)
 
 	// Iterate returns an iterator which walks through the stored pairs
-	Iterate(ctx context.Context, opt iterator.IteratorOpt) (iterator.BytesIterator, error)
+	Iterate(ctx context.Context, opt iterator.IteratorOpt) (iterator.Iterator[[]byte], error)
 }
 
 // KVStore models a Key-Value store

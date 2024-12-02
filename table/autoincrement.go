@@ -30,7 +30,7 @@ func (t *AutoincrementTable[T]) Insert(ctx context.Context, obj *T) error {
 	}
 	t.Setter(obj, id)
 
-	_, err = t.Table.Set(ctx, marshal.EncodeUInt(id), obj)
+	_, err = t.Table.Set(ctx, marshal.EncodeUInt(id), *obj)
 	if err != nil {
 		return err
 	}

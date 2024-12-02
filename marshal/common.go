@@ -9,6 +9,9 @@ import (
 )
 
 var _ Marshaler[uint64] = UIntMarshaler{}
+var _ Marshaler[string] = StringMarshaler{}
+var _ Marshaler[[]byte] = BytesMarshaler{}
+var _ Marshaler[any] = JsonMarshaler[any]{}
 
 type UIntMarshaler struct{}
 
@@ -72,4 +75,16 @@ func (m JsonMarshaler[T]) Unmarshal(bytes []byte) (T, error) {
 		return zero, fmt.Errorf("%w: json unmarshal: %w", ErrMarshaler, err)
 	}
 	return obj, nil
+}
+
+// BytesMarshaler implements Marshaler interface for byte slices
+// Acts as an identity function
+type BytesMarshaler struct{}
+
+func (m BytesMarshaler) Marshal(bytes *[]byte) ([]byte, error) {
+	return *bytes, nil
+}
+
+func (m BytesMarshaler) Unmarshal(bytes []byte) ([]byte, error) {
+	return bytes, nil
 }
