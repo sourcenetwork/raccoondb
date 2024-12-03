@@ -3,7 +3,6 @@ package corekv
 import (
 	"context"
 	goerrors "errors"
-	"fmt"
 
 	"github.com/sourcenetwork/corekv"
 	"github.com/sourcenetwork/corekv/memory"
@@ -13,11 +12,6 @@ import (
 )
 
 var _ (store.KVStore) = (*storeAdapter)(nil)
-
-// wrapErr wraps an error with ErrCoreKV
-func wrapErr(err error) error {
-	return fmt.Errorf("%w: %w", ErrCoreKV, err)
-}
 
 func NewMemKV() store.KVStore {
 	mem := memory.NewDatastore(context.TODO())

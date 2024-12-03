@@ -19,23 +19,21 @@ func NewTable[T any](kv store.KVStore, marshaler marshal.Marshaler[T]) *Table[T]
 	keyObjStore := primitives.NewKeyObjectStore(objKv, marshaler)
 
 	return &Table[T]{
-		objStore: &keyObjStore,
-		indexes:  make(map[string]IndexWriter[T]),
-		idxsKv:   indexesKv,
+		baseStore: kv,
+		objStore:  &keyObjStore,
+		indexes:   make(map[string]indexWrite[T]),
+		idxsKv:    indexesKv,
 	}
 }
 
-func newTableErr(method string, msg string, err error) error {
-	return fmt.Errorf("%w: %v: %v: %w", ErrIndexedObjectStore, method, msg, err)
-}
-
 type Table[T any] struct {
-	objStore *primitives.KeyObjectStore[T]
-	indexes  map[string]IndexWriter[T]
-	idxsKv   store.KVStore
+	baseStore store.KVStore
+	objStore  *primitives.KeyObjectStore[T]
+	indexes   map[string]indexWrite[T]
+	idxsKv    store.KVStore
 }
 
-func (s *Table[T]) addIndexWriter(name string, writer IndexWriter[T]) error {
+func (s *Table[T]) addIndexWriter(name string, writer indexWrite[T]) error {
 	_, exists := s.indexes[name]
 	if exists {
 		return ErrIndexExists
@@ -134,9 +132,65 @@ func (s *Table[T]) MaterializeKeyIter(ctx context.Context, keys ObjKeyIter) iter
 }
 
 func (s *Table[T]) UpateIndexes(ctx context.Context) error {
-	panic("TODO")
+	for _, idx := range s.indexes {
+		err := idx.Wipe(ctx)
+		if err != nil {
+			return newTableErr("UpdateIndexes", "wiping indexes", err)
+		}
+	}
+
+	iter, err := s.objStore.Iterate(ctx, iterator.NewOpenIterator())
+	if err != nil {
+		return newTableErr("UpdateIndexes", "creating iterator", err)
+	}
+
+	for {
+		err := iter.Next(ctx)
+		if err != nil {
+			return newTableErr("UpdateIndexes", "iterating over objects", err)
+		}
+		if iter.Finished() {
+			break
+		}
+		opt := iter.Value()
+		obj := opt.GetValue()
+		for _, idx := range s.indexes {
+			_, err := idx.IndexObject(ctx, iter.CurrentKey(), &obj)
+			if err != nil {
+				return newTableErr("UpdateIndexes", "setting index", err)
+			}
+		}
+	}
+
+	return nil
 }
 
-func (s *Table[T]) GetCatalogue(ctx context.Context) (Catalogue, error) {
-	panic("TODO")
+func (s *Table[T]) GetCatalogue(ctx context.Context) (*Catalogue, error) {
+	dataMap := make(map[string]IndexData)
+	for _, idx := range s.indexes {
+		buckets, err := idx.GetBucketCount(ctx)
+		if err != nil {
+			return nil, newTableErr("GetCatalogue", "fetching bucket count", err)
+		}
+		count, err := idx.GetIndexCount(ctx)
+		if err != nil {
+			return nil, newTableErr("GetCatalogue", "fetching index count", err)
+		}
+		data := IndexData{
+			Name:               idx.GetIndexName(),
+			BucketCount:        buckets,
+			IndexedObjectCount: count,
+		}
+		dataMap[idx.GetIndexName()] = data
+	}
+
+	objCount, err := s.objStore.GetObjectCount(ctx)
+	if err != nil {
+		return nil, newTableErr("GetCatalogue", "fetching obj count", err)
+	}
+
+	return &Catalogue{
+		ObjectCount: objCount,
+		IndexesData: dataMap,
+	}, nil
 }

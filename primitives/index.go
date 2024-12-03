@@ -148,6 +148,14 @@ func (s *FieldIndexStore) GetIndexedItemsCount(ctx context.Context) (uint64, err
 	return count, nil
 }
 
+func (s *FieldIndexStore) Wipe(ctx context.Context) error {
+	err := store.DeleteAll(ctx, s.baseKv)
+	if err != nil {
+		return newFieldIndexErr("Wipe", "DeleteAll", err)
+	}
+	return nil
+}
+
 func getIdxKey(bucket []byte, value []byte) []byte {
 	l := len(bucket) + len(value) + 1
 	key := make([]byte, 0, l)
