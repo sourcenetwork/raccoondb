@@ -9,6 +9,7 @@ import (
 	"github.com/sourcenetwork/raccoondb/v2/store"
 )
 
+// ErrFieldIndex is a top level error for all errors produced by FieldIndexStore
 var ErrFieldIndex = errors.New("FieldIndexStore")
 
 const bucketsPrefix = "buckets/"
@@ -19,8 +20,9 @@ func newFieldIndexErr(method string, msg string, err error) error {
 	return fmt.Errorf("%w: %v: %v: %w", ErrFieldIndex, method, msg, err)
 }
 
-func NewFieldIndexStore(kv store.KVStore) FieldIndexStore {
-	return FieldIndexStore{
+// NewFieldIndexStore returns a new FieldIndexStore from a KVStore
+func NewFieldIndexStore(kv store.KVStore) *FieldIndexStore {
+	return &FieldIndexStore{
 		baseKv:        kv,
 		idx:           NewCountedKVStore(NewPrefixedKV(kv, []byte(idxPrefix))),
 		buckets:       NewCountedKVStore(NewPrefixedKV(kv, []byte(bucketsPrefix))),
@@ -28,14 +30,17 @@ func NewFieldIndexStore(kv store.KVStore) FieldIndexStore {
 	}
 }
 
+// FieldIndexStore models an indexing structure which groups a set of items under a bucket
+// It provides no abstraction over the byte sequences, only a way to iterate over items in a bucket,
+// as well as counters for buckets
 type FieldIndexStore struct {
 	baseKv store.KVStore
 	// buckets store the user defined buckets
-	buckets *CountedKVStore
+	buckets CountedKVStore
 	// bucketCounter stores a count of elements per bucket
 	bucketCounter CounterStore
 	// idx stores the indexed values inside each bucket
-	idx *CountedKVStore
+	idx CountedKVStore
 }
 
 // IndexValue adds a value to a bucket
@@ -105,7 +110,7 @@ func (s *FieldIndexStore) RemoveItem(ctx context.Context, bucket, item []byte) (
 	}
 
 	if removeBucket {
-		_, err := s.bucketCounter.DeleteCounter(ctx, bucket)
+		_, err := s.bucketCounter.Delete(ctx, bucket)
 		if err != nil {
 			return false, newFieldIndexErr("RemoveItem", "removing bucket counter", err)
 		}
@@ -138,6 +143,15 @@ func (s *FieldIndexStore) GetBucketCount(ctx context.Context) (uint64, error) {
 	return count, nil
 }
 
+// GEtCountItemsInBucket returns the number of items contained in a bucket
+func (s *FieldIndexStore) GetCountItemsInBucket(ctx context.Context, bucket []byte) (uint64, error) {
+	count, err := s.bucketCounter.Get(ctx, bucket)
+	if err != nil {
+		return 0, newFieldIndexErr("GetCountItemsInBucket", "getting count", err)
+	}
+	return count, nil
+}
+
 // GetIndexedItemsCount returns the total number of items that have been indexed
 // accross all buckets
 func (s *FieldIndexStore) GetIndexedItemsCount(ctx context.Context) (uint64, error) {
@@ -148,6 +162,7 @@ func (s *FieldIndexStore) GetIndexedItemsCount(ctx context.Context) (uint64, err
 	return count, nil
 }
 
+// Wipe removes all entries from FieldIndexStore
 func (s *FieldIndexStore) Wipe(ctx context.Context) error {
 	err := store.DeleteAll(ctx, s.baseKv)
 	if err != nil {

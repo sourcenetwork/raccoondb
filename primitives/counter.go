@@ -9,6 +9,7 @@ import (
 	"github.com/sourcenetwork/raccoondb/v2/store"
 )
 
+// ErrCounterStore is a top level error for all errors produced by CounterStore
 var ErrCounterStore = errors.New("counter store")
 
 func wrapCounterErr(method string, err error) error {
@@ -22,13 +23,13 @@ func NewCounterStore(kv store.KVStore) CounterStore {
 	}
 }
 
-// CounterStore abstracts a KVStore to create a store similar to a Program Counter
+// CounterStore abstracts a KVStore to create a store of Counters,
 // where each key has an int value associated to it
 type CounterStore struct {
 	kv store.KVStore
 }
 
-// GetFree returns the next free number in the counter
+// GetFree returns the next free number in the Counter
 func (r *CounterStore) GetNext(ctx context.Context, key []byte) (uint64, error) {
 	current, err := r.getValue(ctx, key)
 	if err != nil {
@@ -46,7 +47,7 @@ func (r *CounterStore) Get(ctx context.Context, key []byte) (uint64, error) {
 	return val, nil
 }
 
-// Has return true if the counter exists for key
+// Has return true if the Counter exists for key
 func (r *CounterStore) Has(ctx context.Context, key []byte) (bool, error) {
 	has, err := r.kv.Has(ctx, key)
 	if err != nil {
@@ -93,11 +94,15 @@ func (r *CounterStore) Increment(ctx context.Context, key []byte) (uint64, error
 	return free, nil
 }
 
-// Decrement reduces the counter by 1, returns new counter value
+// Decrement reduces the Counter by 1, returns new counter value.
+// If the current value is 0, no change is made
 func (r *CounterStore) Decrement(ctx context.Context, key []byte) (uint64, error) {
 	counter, err := r.Get(ctx, key)
 	if err != nil {
 		return 0, wrapCounterErr("Decrement", err)
+	}
+	if counter == 0 {
+		return 0, nil
 	}
 	counter -= 1
 	err = r.setValue(ctx, key, counter)
@@ -107,7 +112,8 @@ func (r *CounterStore) Decrement(ctx context.Context, key []byte) (uint64, error
 	return counter, nil
 }
 
-func (r *CounterStore) DeleteCounter(ctx context.Context, key []byte) (store.KeyRemoved, error) {
+// Delete removes the Counter identified by key
+func (r *CounterStore) Delete(ctx context.Context, key []byte) (store.KeyRemoved, error) {
 	removed, err := r.kv.Delete(ctx, key)
 	if err != nil {
 		return false, wrapCounterErr("DeleteCounter", err)

@@ -2,6 +2,7 @@ package utils
 
 import "fmt"
 
+// Predicate models a boolean property for an object
 type Predicate[T any] func(T) bool
 
 // MapSlice produces a new slice from a slice of elements and a mapping function

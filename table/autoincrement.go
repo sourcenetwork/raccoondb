@@ -11,9 +11,18 @@ import (
 
 const counterKey string = "id"
 
+// IDSetter models a hook which is used by AutoincrementTable
+// to set the new ID of an object beign inserted
 type IDSetter[T any] func(obj *T, id uint64)
+
+// IDGetter models a hook which is used by AutoincrementTable
+// to get the existing ID from the given object
 type IDGetter[T any] func(obj *T) uint64
 
+// AutoIncrementTable adds a top level counter to a Table,
+// which is used to generate Identifiers for objects stored in Table.
+//
+// Identifiers are unsigned integers, which are marshaled using big endian encoding.
 type AutoincrementTable[T any] struct {
 	*Table[T]
 	counter primitives.CounterStore
@@ -43,6 +52,7 @@ func (t *AutoincrementTable[T]) Insert(ctx context.Context, obj *T) error {
 	return nil
 }
 
+// GetByID returns the object stored with the given integer id
 func (t *AutoincrementTable[T]) GetByID(ctx context.Context, id uint64) (types.Option[T], error) {
 	opt, err := t.Table.Get(ctx, []byte(counterKey))
 	if err != nil {
@@ -51,6 +61,7 @@ func (t *AutoincrementTable[T]) GetByID(ctx context.Context, id uint64) (types.O
 	return opt, nil
 }
 
+// DeleteByID removes the object stored with the given integer id
 func (t *AutoincrementTable[T]) DeleteByID(ctx context.Context, id uint64) (store.KeyRemoved, error) {
 	removed, err := t.Table.Delete(ctx, marshal.EncodeUInt(id))
 	if err != nil {

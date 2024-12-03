@@ -10,6 +10,10 @@ import (
 	"github.com/sourcenetwork/raccoondb/v2/types"
 )
 
+var _ iterator.Iterator[[]byte] = (*prefixStoreIterator)(nil)
+var _ store.KVStore = (*PrefixStore)(nil)
+
+// ErrPrefixStore is a top level error for all errors produced by PrefixStore
 var ErrPrefixStore = errors.New("prefix store")
 
 func newPrefixErr(method string, msg string, err error) error {
@@ -20,15 +24,15 @@ func newKeyNilErr(method string) error {
 	return fmt.Errorf("%w: %v: %w", ErrPrefixStore, method, store.ErrKeyNil)
 }
 
+// NewPrefixedKV returns a KVStore which wraps store to automatically add prefix
+// to all keys.
+// Prefixed KVStores can be used to scope or add namespaces to a KVStore
 func NewPrefixedKV(store store.KVStore, prefix []byte) store.KVStore {
 	return &PrefixStore{
 		store:  store,
 		prefix: prefix,
 	}
 }
-
-var _ iterator.Iterator[[]byte] = (*prefixStoreIterator)(nil)
-var _ store.KVStore = (*PrefixStore)(nil)
 
 // PrefixStore implements raccoon's store.KVStore to a store.KVStore by wrapping its methods with a global prefix
 type PrefixStore struct {
@@ -101,7 +105,7 @@ func (kv *PrefixStore) Iterate(ctx context.Context, opt iterator.IteratorOpt) (i
 	}, nil
 }
 
-// prefixStoreIterator
+// prefixStoreIterator implements iterator.Iterator
 type prefixStoreIterator struct {
 	iter   *iterator.PrefixIterator[[]byte]
 	prefix []byte
@@ -115,12 +119,13 @@ func (i *prefixStoreIterator) Next(ctx context.Context) error {
 	return i.iter.Next(ctx)
 }
 
-// Key strips prefix from Key
 func (i *prefixStoreIterator) CurrentKey() (key []byte) {
 	key = i.iter.CurrentKey()
 	if key == nil {
 		return nil
 	}
+	// prefix store should transparently handle the prefix
+	// therefore we strip the prefix from the returned key
 	return key[len(i.prefix):]
 }
 

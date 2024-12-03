@@ -26,7 +26,7 @@ func NewIndex[T, I any](table *Table[T], name string, extractor IndexValueExtrac
 	fieldIdx := primitives.NewFieldIndexStore(idxKv)
 	idx := &tableIndex[T, I]{
 		name:      name,
-		index:     &fieldIdx,
+		index:     fieldIdx,
 		extractor: extractor,
 		marshaler: marshaler,
 	}
@@ -158,6 +158,7 @@ func (i *tableIndex[T, I]) IndexObject(ctx context.Context, key []byte, obj *T) 
 	return created, nil
 }
 
+// UpdateIndex removes key from the index value / bucket of old and moves it to new
 func (i *tableIndex[T, I]) UpdateIndex(ctx context.Context, key []byte, old *T, new *T) error {
 	val := i.extractor(old)
 	bucket, err := i.marshaler.Marshal(&val)
@@ -177,6 +178,7 @@ func (i *tableIndex[T, I]) UpdateIndex(ctx context.Context, key []byte, old *T, 
 	return nil
 }
 
+// UnindexObject removes key from the bucket associated to obj
 func (i *tableIndex[T, I]) UnindexObject(ctx context.Context, key []byte, obj *T) (store.KeyRemoved, error) {
 	val := i.extractor(obj)
 	bucket, err := i.marshaler.Marshal(&val)
@@ -191,6 +193,7 @@ func (i *tableIndex[T, I]) UnindexObject(ctx context.Context, key []byte, obj *T
 	return removed, nil
 }
 
+// GetIndexName returns the index name
 func (i *tableIndex[T, I]) GetIndexName() string {
 	return i.name
 }

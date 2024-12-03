@@ -12,7 +12,9 @@ import (
 )
 
 var _ store.KVStore = (*Table[[]byte])(nil)
+var _ primitives.CountedKVStore = (*Table[[]byte])(nil)
 
+// NewTable returns a new instance of Table for the given kv and marshaler
 func NewTable[T any](kv store.KVStore, marshaler marshal.Marshaler[T]) *Table[T] {
 	indexesKv := primitives.NewPrefixedKV(kv, []byte(idxsPrefix))
 	objKv := primitives.NewPrefixedKV(kv, []byte(objsPrefix))
@@ -26,6 +28,13 @@ func NewTable[T any](kv store.KVStore, marshaler marshal.Marshaler[T]) *Table[T]
 	}
 }
 
+// Table models a managed key-object store and a set of indexes.
+// Mutations applied to Table are reflected in the known indexes, such as setting or deleting objects.
+//
+// New Indexes can be created, which are automatically added to Table,
+// note that new indexes are not automatically updated to include previous records.
+//
+// Table implements CountedKVStore.
 type Table[T any] struct {
 	baseStore store.KVStore
 	objStore  *primitives.KeyObjectStore[T]
@@ -127,10 +136,8 @@ func (s *Table[T]) Has(ctx context.Context, key []byte) (bool, error) {
 	return has, nil
 }
 
-func (s *Table[T]) MaterializeKeyIter(ctx context.Context, keys ObjKeyIter) iterator.Iterator[T] {
-	return MaterializeObjects(ctx, s.objStore, keys)
-}
-
+// UpdateIndexes removes all data stored in the known indexes
+// and reinserts it using the latest state of stored objects
 func (s *Table[T]) UpateIndexes(ctx context.Context) error {
 	for _, idx := range s.indexes {
 		err := idx.Wipe(ctx)
@@ -165,6 +172,15 @@ func (s *Table[T]) UpateIndexes(ctx context.Context) error {
 	return nil
 }
 
+func (s *Table[T]) GetCount(ctx context.Context) (uint64, error) {
+	count, err := s.objStore.GetCount(ctx)
+	if err != nil {
+		return 0, newTableErr("GetCount", "fetching count", err)
+	}
+	return count, nil
+}
+
+// GetCatalogue returns all metadata tracked by the Table in a Catalogue
 func (s *Table[T]) GetCatalogue(ctx context.Context) (*Catalogue, error) {
 	dataMap := make(map[string]IndexData)
 	for _, idx := range s.indexes {
@@ -184,7 +200,7 @@ func (s *Table[T]) GetCatalogue(ctx context.Context) (*Catalogue, error) {
 		dataMap[idx.GetIndexName()] = data
 	}
 
-	objCount, err := s.objStore.GetObjectCount(ctx)
+	objCount, err := s.objStore.GetCount(ctx)
 	if err != nil {
 		return nil, newTableErr("GetCatalogue", "fetching obj count", err)
 	}

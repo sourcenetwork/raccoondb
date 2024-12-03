@@ -14,36 +14,36 @@ import (
 	"github.com/sourcenetwork/raccoondb/v2/types"
 )
 
-var ErrCountedKVStore = errors.New("CounterKVStore error")
+// ErrCountedKVStore is a top level error for all errors produced by CountedKVStore
+var ErrCountedKVStore = errors.New("CountedKVStore error")
 
-var _ store.KVStore = (*CountedKVStore)(nil)
+var _ store.KVStore = (*countedKVStore)(nil)
 
 const countPrefix = "count/"
 const valsPrefix = "vals/"
 const counterKey = "i"
 
-// Return a KeyObjectStore from a store.KVStore using marshaler to (un)marshal objects.
-func NewCountedKVStore(kv store.KVStore) *CountedKVStore {
+// Return an instance of CountedKVStore which tracks the amount of values managed by the store.
+func NewCountedKVStore(kv store.KVStore) CountedKVStore {
 	vals := NewPrefixedKV(kv, []byte(valsPrefix))
 	countPrefixed := NewPrefixedKV(kv, []byte(countPrefix))
 	counter := NewCounterStore(countPrefixed)
 
-	return &CountedKVStore{
+	return &countedKVStore{
 		baseStore: kv,
 		vals:      vals,
 		counter:   counter,
 	}
 }
 
-// CountedKVStore implements raccoon's ObjKV interface
-type CountedKVStore struct {
+// countedKVStore implements raccoon's CountedKVStore interface
+type countedKVStore struct {
 	baseStore store.KVStore
 	vals      store.KVStore
 	counter   CounterStore
 }
 
-// Fetch object from store using the given key
-func (s *CountedKVStore) Get(ctx context.Context, key []byte) (types.Option[[]byte], error) {
+func (s *countedKVStore) Get(ctx context.Context, key []byte) (types.Option[[]byte], error) {
 	opt, err := s.vals.Get(ctx, key)
 	if err != nil {
 		return types.None[[]byte](), fmt.Errorf("%w: get: %w", ErrCountedKVStore, err)
@@ -51,8 +51,7 @@ func (s *CountedKVStore) Get(ctx context.Context, key []byte) (types.Option[[]by
 	return opt, nil
 }
 
-// Set key with obj
-func (s *CountedKVStore) Set(ctx context.Context, key []byte, value []byte) (store.KeyCreated, error) {
+func (s *countedKVStore) Set(ctx context.Context, key []byte, value []byte) (store.KeyCreated, error) {
 	created, err := s.vals.Set(ctx, key, value)
 	if err != nil {
 		return false, fmt.Errorf("%w: set: setting record: %w", ErrCountedKVStore, err)
@@ -66,8 +65,7 @@ func (s *CountedKVStore) Set(ctx context.Context, key []byte, value []byte) (sto
 	return created, nil
 }
 
-// Remove key from store
-func (s *CountedKVStore) Delete(ctx context.Context, key []byte) (store.KeyRemoved, error) {
+func (s *countedKVStore) Delete(ctx context.Context, key []byte) (store.KeyRemoved, error) {
 	removed, err := s.vals.Delete(ctx, key)
 	if err != nil {
 		return false, fmt.Errorf("%w: delete: deleting record: %w", ErrCountedKVStore, err)
@@ -81,8 +79,7 @@ func (s *CountedKVStore) Delete(ctx context.Context, key []byte) (store.KeyRemov
 	return removed, nil
 }
 
-// Check whether key exists in store.KVStore
-func (s *CountedKVStore) Has(ctx context.Context, key []byte) (bool, error) {
+func (s *countedKVStore) Has(ctx context.Context, key []byte) (bool, error) {
 	has, err := s.vals.Has(ctx, key)
 	if err != nil {
 		return false, fmt.Errorf("%w: has: %w", ErrCountedKVStore, err)
@@ -90,7 +87,7 @@ func (s *CountedKVStore) Has(ctx context.Context, key []byte) (bool, error) {
 	return has, nil
 }
 
-func (s *CountedKVStore) Iterate(ctx context.Context, opts iterator.IteratorOpt) (iterator.Iterator[[]byte], error) {
+func (s *countedKVStore) Iterate(ctx context.Context, opts iterator.IteratorOpt) (iterator.Iterator[[]byte], error) {
 	iter, err := s.vals.Iterate(ctx, opts)
 	if err != nil {
 		return nil, fmt.Errorf("%w: iterate: %w", ErrCountedKVStore, err)
@@ -98,7 +95,7 @@ func (s *CountedKVStore) Iterate(ctx context.Context, opts iterator.IteratorOpt)
 	return iter, nil
 }
 
-func (s *CountedKVStore) GetCount(ctx context.Context) (uint64, error) {
+func (s *countedKVStore) GetCount(ctx context.Context) (uint64, error) {
 	i, err := s.counter.Get(ctx, []byte(counterKey))
 	if err != nil {
 		return 0, fmt.Errorf("%w: getting counter value: %w", ErrCountedKVStore, err)

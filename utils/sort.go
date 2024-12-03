@@ -6,6 +6,7 @@ import (
 
 var _ sort.Interface = (*Sortable[any])(nil)
 
+// Ordered models all go native types that are inherentily ordered
 type Ordered interface {
 	~int | ~int8 | ~int16 | ~int32 | ~int64 | ~float32 | ~float64 | ~string | ~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr
 }
@@ -49,14 +50,17 @@ func FromComparator[T any](vals []T, comparator Comparator[T]) Sortable[T] {
 	}
 }
 
+// Len implements sort.Interface
 func (s *Sortable[T]) Len() int {
 	return len(s.ts)
 }
 
+// Swap implements sort.Interface
 func (s *Sortable[T]) Swap(i, j int) {
 	s.ts[i], s.ts[j] = s.ts[j], s.ts[i]
 }
 
+// Swap implements sort.Interface
 func (s *Sortable[T]) Less(i, j int) bool {
 	ti, tj := s.ts[i], s.ts[j]
 	return s.comparator(ti, tj)

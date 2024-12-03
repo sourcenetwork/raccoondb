@@ -11,8 +11,9 @@ import (
 	"github.com/sourcenetwork/raccoondb/v2/types"
 )
 
-var _ store.KVStore = (*KeyObjectStore[[]byte])(nil)
+var _ CountedKVStore = (*KeyObjectStore[[]byte])(nil)
 
+// ErrKeyObjectStore is a top level error for all errors produced by KeyObjectStore
 var ErrKeyObjectStore = errors.New("KeyObjectStore error")
 
 func newErrKeyObject(method string, msg string, err error) error {
@@ -28,9 +29,13 @@ func NewKeyObjectStore[O any](kv store.KVStore, marshaler marshal.Marshaler[O]) 
 	}
 }
 
-// KeyObjectStore implements raccoon's ObjKV interface
+// KeyObjectStore abstracts a KVStore by adding automatic marshaling / unmarshaling
+// of byte sequences to it.
+// This is abstraction is useful to implement a Document-like storage system.
+//
+// KeyObjectStore implements CountedKVStore
 type KeyObjectStore[Obj any] struct {
-	kv        *CountedKVStore
+	kv        CountedKVStore
 	marshaler marshal.Marshaler[Obj]
 }
 
@@ -92,7 +97,8 @@ func (s *KeyObjectStore[Obj]) Iterate(ctx context.Context, opts iterator.Iterato
 	return objIter, nil
 }
 
-func (s *KeyObjectStore[Obj]) GetObjectCount(ctx context.Context) (uint64, error) {
+// GetCount returns the total number of objects in the store
+func (s *KeyObjectStore[Obj]) GetCount(ctx context.Context) (uint64, error) {
 	count, err := s.kv.GetCount(ctx)
 	if err != nil {
 		return 0, newErrKeyObject("GetObjectCount", "getting count", err)

@@ -1,3 +1,4 @@
+// package store contains type definitions for Raccoon's KV Store
 package store
 
 import (

@@ -126,7 +126,7 @@ func Test_CounterStore_DeleteCounter(t *testing.T) {
 	_, err := counter.Increment(ctx, testCounter)
 	require.NoError(t, err)
 
-	removed, err := counter.DeleteCounter(ctx, testCounter)
+	removed, err := counter.Delete(ctx, testCounter)
 	require.NoError(t, err)
 	require.True(t, bool(removed))
 
