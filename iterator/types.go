@@ -58,9 +58,6 @@ type Iterator[T any] interface {
 	// Close frees up resources taken by the Iterator
 	Close() error
 
-	// GetParams returns the control options specifying the iterator
-	GetParams() IteratorOpt
-
 	// CurrentKey returns the key of the current element
 	// If Finished is true, return nil
 	CurrentKey() []byte

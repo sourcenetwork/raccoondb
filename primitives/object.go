@@ -84,7 +84,7 @@ func (s *KeyObjectStore[Obj]) Has(ctx context.Context, key []byte) (bool, error)
 	return has, nil
 }
 
-func (s *KeyObjectStore[Obj]) Iterate(ctx context.Context, opts iterator.IteratorOpt) (iterator.Iterator[Obj], error) {
+func (s *KeyObjectStore[Obj]) Iterate(ctx context.Context, opts store.IteratorOpt) (store.StoreIterator[Obj], error) {
 	iter, err := s.kv.Iterate(ctx, opts)
 	if err != nil {
 		return nil, newErrKeyObject("Iterate", "creating iterator", err)
@@ -94,7 +94,7 @@ func (s *KeyObjectStore[Obj]) Iterate(ctx context.Context, opts iterator.Iterato
 		return s.marshaler.Unmarshal(bytes)
 	})
 
-	return objIter, nil
+	return store.ToStoreIter(objIter, opts), nil
 }
 
 // GetCount returns the total number of objects in the store

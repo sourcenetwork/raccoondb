@@ -5,7 +5,6 @@ import (
 	goerrors "errors"
 
 	"github.com/sourcenetwork/corekv"
-	"github.com/sourcenetwork/raccoondb/v2/iterator"
 	"github.com/sourcenetwork/raccoondb/v2/store"
 	"github.com/sourcenetwork/raccoondb/v2/types"
 )
@@ -52,9 +51,13 @@ func (a *storeAdapter) Has(ctx context.Context, key []byte) (bool, error) {
 	return has, nil
 }
 
-func (a *storeAdapter) Iterate(ctx context.Context, opt iterator.IteratorOpt) (iterator.Iterator[[]byte], error) {
-	// TODO fix opts
-	iter := a.kv.Iterator(ctx, corekv.IterOptions{})
+func (a *storeAdapter) Iterate(ctx context.Context, opt store.IteratorOpt) (store.StoreIterator[[]byte], error) {
+	o := corekv.IterOptions{
+		Start:   opt.GetLeftBound(),
+		End:     opt.GetRightBound(),
+		Reverse: opt.IsReverse(),
+	}
+	iter := a.kv.Iterator(ctx, o)
 	return &iterAdapter{
 		iter: iter,
 	}, nil

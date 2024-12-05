@@ -5,12 +5,10 @@ import (
 	"fmt"
 
 	"github.com/sourcenetwork/raccoondb/v2/errors"
-	"github.com/sourcenetwork/raccoondb/v2/iterator"
 	"github.com/sourcenetwork/raccoondb/v2/store"
 	"github.com/sourcenetwork/raccoondb/v2/types"
 )
 
-var _ iterator.Iterator[[]byte] = (*prefixStoreIterator)(nil)
 var _ store.KVStore = (*PrefixStore)(nil)
 
 // ErrPrefixStore is a top level error for all errors produced by PrefixStore
@@ -94,49 +92,10 @@ func (kv *PrefixStore) Delete(ctx context.Context, key []byte) (store.KeyRemoved
 	return deleted, nil
 }
 
-func (kv *PrefixStore) Iterate(ctx context.Context, opt iterator.IteratorOpt) (iterator.Iterator[[]byte], error) {
-	iter, err := kv.store.Iterate(ctx, opt)
+func (kv *PrefixStore) Iterate(ctx context.Context, opt store.IteratorOpt) (store.StoreIterator[[]byte], error) {
+	iter, err := store.IteratePrefix(ctx, kv.store, kv.prefix, opt, true)
 	if err != nil {
 		return nil, newPrefixErr("Iterator", "creating iterator", err)
 	}
-	return &prefixStoreIterator{
-		iter:   iterator.NewPrefixIterator(kv.prefix, iter),
-		prefix: kv.prefix,
-	}, nil
-}
-
-// prefixStoreIterator implements iterator.Iterator
-type prefixStoreIterator struct {
-	iter   *iterator.PrefixIterator[[]byte]
-	prefix []byte
-}
-
-func (i *prefixStoreIterator) Finished() bool {
-	return i.iter.Finished()
-}
-
-func (i *prefixStoreIterator) Next(ctx context.Context) error {
-	return i.iter.Next(ctx)
-}
-
-func (i *prefixStoreIterator) CurrentKey() (key []byte) {
-	key = i.iter.CurrentKey()
-	if key == nil {
-		return nil
-	}
-	// prefix store should transparently handle the prefix
-	// therefore we strip the prefix from the returned key
-	return key[len(i.prefix):]
-}
-
-func (i *prefixStoreIterator) Value() types.Option[[]byte] {
-	return i.iter.Value()
-}
-
-func (i *prefixStoreIterator) Close() error {
-	return i.iter.Close()
-}
-
-func (i *prefixStoreIterator) GetParams() iterator.IteratorOpt {
-	return i.iter.GetParams()
+	return store.ToStoreIter(iter, opt), nil
 }

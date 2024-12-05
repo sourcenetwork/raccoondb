@@ -5,13 +5,13 @@ import (
 
 	cmdb "github.com/cometbft/cometbft-db"
 
-	"github.com/sourcenetwork/raccoondb/v2/iterator"
+	"github.com/sourcenetwork/raccoondb/v2/store"
 	"github.com/sourcenetwork/raccoondb/v2/types"
 )
 
-var _ iterator.Iterator[[]byte] = (*iterWrapper)(nil)
+var _ store.StoreIterator[[]byte] = (*iterWrapper)(nil)
 
-func newWrappedIter(iter cmdb.Iterator) iterator.Iterator[[]byte] {
+func newWrappedIter(iter cmdb.Iterator) store.StoreIterator[[]byte] {
 	return &iterWrapper{
 		i:           iter,
 		initialized: false,
@@ -21,6 +21,7 @@ func newWrappedIter(iter cmdb.Iterator) iterator.Iterator[[]byte] {
 
 type iterWrapper struct {
 	i           cmdb.Iterator
+	params      store.IteratorOpt
 	initialized bool
 	finished    bool
 }
@@ -68,8 +69,8 @@ func (i *iterWrapper) Close() error {
 	return nil
 }
 
-func (i *iterWrapper) GetParams() iterator.IteratorOpt {
-	return iterator.NewOpenIterator() // TODO
+func (i *iterWrapper) GetParams() store.IteratorOpt {
+	return i.params
 }
 
 func (i *iterWrapper) CurrentKey() []byte {

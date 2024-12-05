@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/sourcenetwork/raccoondb/v2/iterator"
 	"github.com/sourcenetwork/raccoondb/v2/store"
 	"github.com/sourcenetwork/raccoondb/v2/store/corekv"
 	"github.com/sourcenetwork/raccoondb/v2/store/test"
@@ -50,7 +49,7 @@ func Test_PrefixKV_BaseStoreWithElementsAfterPrefixAreNotIncludedInIterator(t *t
 	require.NoError(t, err)
 
 	// when I iterate all items in prefix store
-	iter, err := pkv.Iterate(ctx, iterator.NewOpenIterator())
+	iter, err := pkv.Iterate(ctx, store.NewOpenIterator())
 	require.NoError(t, err)
 
 	// then only the entry for testKey is returned

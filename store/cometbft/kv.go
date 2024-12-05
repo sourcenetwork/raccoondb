@@ -4,7 +4,6 @@ import (
 	"context"
 
 	cmdb "github.com/cometbft/cometbft-db"
-	"github.com/sourcenetwork/raccoondb/v2/iterator"
 	"github.com/sourcenetwork/raccoondb/v2/store"
 	"github.com/sourcenetwork/raccoondb/v2/types"
 )
@@ -50,8 +49,15 @@ func (k *kvWrapper) Has(ctx context.Context, key []byte) (bool, error) {
 	return has, nil
 }
 
-func (k *kvWrapper) Iterate(ctx context.Context, opt iterator.IteratorOpt) (iterator.Iterator[[]byte], error) {
-	iter, err := k.db.Iterator(nil, nil) // TODO
+func (k *kvWrapper) Iterate(ctx context.Context, opt store.IteratorOpt) (store.StoreIterator[[]byte], error) {
+	var iter cmdb.Iterator
+	var err error
+	if opt.IsReverse() {
+		iter, err = k.db.ReverseIterator(opt.GetLeftBound(), opt.GetRightBound())
+	} else {
+		iter, err = k.db.Iterator(opt.GetLeftBound(), opt.GetRightBound())
+	}
+
 	if err != nil {
 		return nil, wrapErr(err)
 	}

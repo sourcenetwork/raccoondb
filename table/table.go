@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/sourcenetwork/raccoondb/v2/iterator"
 	"github.com/sourcenetwork/raccoondb/v2/marshal"
 	"github.com/sourcenetwork/raccoondb/v2/primitives"
 	"github.com/sourcenetwork/raccoondb/v2/store"
@@ -120,7 +119,7 @@ func (s *Table[T]) Get(ctx context.Context, key []byte) (types.Option[T], error)
 	return opt, nil
 }
 
-func (s *Table[T]) Iterate(ctx context.Context, opt iterator.IteratorOpt) (iterator.Iterator[T], error) {
+func (s *Table[T]) Iterate(ctx context.Context, opt store.IteratorOpt) (store.StoreIterator[T], error) {
 	iter, err := s.objStore.Iterate(ctx, opt)
 	if err != nil {
 		return nil, newTableErr("Iterate", "creating iterator", err)
@@ -146,7 +145,7 @@ func (s *Table[T]) UpateIndexes(ctx context.Context) error {
 		}
 	}
 
-	iter, err := s.objStore.Iterate(ctx, iterator.NewOpenIterator())
+	iter, err := s.objStore.Iterate(ctx, store.NewOpenIterator())
 	if err != nil {
 		return newTableErr("UpdateIndexes", "creating iterator", err)
 	}

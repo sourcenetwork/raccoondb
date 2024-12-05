@@ -79,9 +79,9 @@ func (s *FieldIndexStore) Has(ctx context.Context, bucket, item []byte) (bool, e
 }
 
 // IterateBucketValues returns an iterator which returns all values contained in a bucket
-func (s *FieldIndexStore) IterateBucketItems(ctx context.Context, bucket []byte) (iterator.BytesIterator, error) {
+func (s *FieldIndexStore) IterateBucketItems(ctx context.Context, bucket []byte, opt store.IteratorOpt) (iterator.BytesIterator, error) {
 	bucketStore := NewPrefixedKV(s.idx, concatKey(bucket, []byte("/")))
-	iter, err := bucketStore.Iterate(ctx, iterator.NewOpenIterator())
+	iter, err := bucketStore.Iterate(ctx, opt)
 	if err != nil {
 		return nil, newFieldIndexErr("IterateBucketItems", "creating iterator", err)
 	}
@@ -126,8 +126,8 @@ func (s *FieldIndexStore) RemoveItem(ctx context.Context, bucket, item []byte) (
 
 // IterateBuckets returns an iterator over all buckets which currently contains at least
 // one item, where the iterator key and its value are the bucket
-func (s *FieldIndexStore) IterateBuckets(ctx context.Context) (iterator.BytesIterator, error) {
-	iter, err := s.buckets.Iterate(ctx, iterator.NewOpenIterator())
+func (s *FieldIndexStore) IterateBuckets(ctx context.Context, opt store.IteratorOpt) (iterator.BytesIterator, error) {
+	iter, err := s.buckets.Iterate(ctx, opt)
 	if err != nil {
 		return nil, newFieldIndexErr("IterateBuckets", "creating iterator", err)
 	}

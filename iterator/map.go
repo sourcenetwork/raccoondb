@@ -87,10 +87,6 @@ func (i *mapIter[T, U]) Close() error {
 	return i.inner.Close()
 }
 
-func (i *mapIter[T, U]) GetParams() IteratorOpt {
-	return i.inner.GetParams()
-}
-
 func (i *mapIter[T, U]) CurrentKey() []byte {
 	return i.inner.CurrentKey()
 }

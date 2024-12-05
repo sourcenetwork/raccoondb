@@ -7,7 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sourcenetwork/raccoondb/v2/iterator"
 	"github.com/sourcenetwork/raccoondb/v2/store"
 	"github.com/stretchr/testify/require"
 )
@@ -161,7 +160,7 @@ func test_Iterate_ReturnsIteratorOverAllItems(t *testing.T, kv store.KVStore) {
 		require.NoError(t, err)
 	}
 
-	iter, err := kv.Iterate(ctx, iterator.NewOpenIterator())
+	iter, err := kv.Iterate(ctx, store.NewOpenIterator())
 	require.NoError(t, err)
 
 	require.Nil(t, iter.CurrentKey())

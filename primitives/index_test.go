@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/sourcenetwork/raccoondb/v2/iterator"
+	"github.com/sourcenetwork/raccoondb/v2/store"
 	"github.com/sourcenetwork/raccoondb/v2/store/cometbft"
 	"github.com/sourcenetwork/raccoondb/v2/store/test"
 	"github.com/stretchr/testify/require"
@@ -25,7 +26,7 @@ func Test_FieldIndexStore_ValesInBucket_CanIter(t *testing.T) {
 	require.True(t, bool(created))
 	require.NoError(t, err)
 
-	iter, err := idx.IterateBucketItems(ctx, testBucket)
+	iter, err := idx.IterateBucketItems(ctx, testBucket, store.NewOpenIterator())
 	require.NoError(t, err)
 
 	pairs := iterator.ConsumePairs(ctx, iter)
@@ -77,7 +78,7 @@ func Test_FieldIndexStore_RemovingLastItemFromBucket_DeletesAndDecrementBucket(t
 	require.NoError(t, err)
 	require.Equal(t, uint64(1), count)
 
-	bucketsIter, err := idx.IterateBuckets(ctx)
+	bucketsIter, err := idx.IterateBuckets(ctx, store.NewOpenIterator())
 	require.NoError(t, err)
 	buckets, errs := iterator.Consume(ctx, bucketsIter)
 	require.Empty(t, errs)

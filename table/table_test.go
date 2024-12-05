@@ -74,7 +74,7 @@ func Test_Table_RemovingObjectRemovesItFromIdx(t *testing.T) {
 
 	// then name index contains record 2 only
 	bob := "bob"
-	iter, err := idx.IterateKeys(ctx, &bob)
+	iter, err := idx.IterateKeys(ctx, &bob, store.NewOpenIterator())
 	require.NoError(t, err)
 	ids, errs := iterator.Consume(ctx, iter)
 	require.Empty(t, errs)
@@ -93,7 +93,7 @@ func Test_Table_IterContainsIndexedObjects(t *testing.T) {
 	table.Set(ctx, []byte("b"), Record{"bob"})
 
 	bucket := "bob"
-	iter, err := idx.IterateKeys(ctx, &bucket)
+	iter, err := idx.IterateKeys(ctx, &bucket, store.NewOpenIterator())
 	require.NoError(t, err)
 	test.DumpStore(t, table.baseStore)
 
@@ -117,7 +117,7 @@ func Test_Table_IterateBuckets_ReturnsAllBuckets(t *testing.T) {
 	table.Set(ctx, []byte("b"), Record{"bob"})
 	table.Set(ctx, []byte("a"), Record{"alice"})
 
-	iter, err := idx.IterateBuckets(ctx)
+	iter, err := idx.IterateBuckets(ctx, store.NewOpenIterator())
 	require.NoError(t, err)
 
 	buckets, errs := iterator.Consume(ctx, iter)

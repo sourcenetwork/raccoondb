@@ -74,11 +74,11 @@ type IndexReader[T, I any] interface {
 
 	// IterateKeys returns an iterator which yiels the
 	// keys of all objects indexed under bucket
-	IterateKeys(ctx context.Context, bucket *I) (ObjKeyIter, error)
+	IterateKeys(ctx context.Context, bucket *I, opt store.IteratorOpt) (ObjKeyIter, error)
 
 	// IterateBuckets returns an iterator which yields all buckets
 	// which contains at least one object
-	IterateBuckets(ctx context.Context) (iterator.Iterator[I], error)
+	IterateBuckets(ctx context.Context, opt store.IteratorOpt) (iterator.Iterator[I], error)
 
 	// Has returns true if bucket contains the given key
 	Has(ctx context.Context, bucket *I, key []byte) (bool, error)
@@ -94,13 +94,13 @@ type tableIndex[T any, I any] struct {
 }
 
 // Iterate returns an iterator which steps though the object keys indexed in a given bucket / value
-func (i *tableIndex[T, I]) IterateKeys(ctx context.Context, bucket *I) (ObjKeyIter, error) {
+func (i *tableIndex[T, I]) IterateKeys(ctx context.Context, bucket *I, opt store.IteratorOpt) (ObjKeyIter, error) {
 	bytes, err := i.marshaler.Marshal(bucket)
 	if err != nil {
 		return nil, newIndexErr("IterateKeys", "marshaling bucket", err)
 	}
 
-	iter, err := i.index.IterateBucketItems(ctx, bytes)
+	iter, err := i.index.IterateBucketItems(ctx, bytes, opt)
 	if err != nil {
 		return nil, newIndexErr("IterateKeys", "buckets iterator", err)
 	}
@@ -108,8 +108,8 @@ func (i *tableIndex[T, I]) IterateKeys(ctx context.Context, bucket *I) (ObjKeyIt
 }
 
 // IterateValues returns an iterator which steps though the buckets / values in the index
-func (i *tableIndex[T, I]) IterateBuckets(ctx context.Context) (iterator.Iterator[I], error) {
-	iter, err := i.index.IterateBuckets(ctx)
+func (i *tableIndex[T, I]) IterateBuckets(ctx context.Context, opt store.IteratorOpt) (iterator.Iterator[I], error) {
+	iter, err := i.index.IterateBuckets(ctx, opt)
 	if err != nil {
 		return nil, newIndexErr("IterateValues", "creating iterator", err)
 	}

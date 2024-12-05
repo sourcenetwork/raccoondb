@@ -14,7 +14,7 @@ func Test_Prefix_WhithoutPrefix_ReturnsNoItems(t *testing.T) {
 		"test": "test",
 	}
 	iter := IterFromStringKeyMap(items)
-	iter = NewPrefixIterator([]byte("_"), iter)
+	iter = NewPrefixIterator([]byte("_"), iter, false)
 
 	vals, errs := Consume(context.TODO(), iter)
 
@@ -29,7 +29,7 @@ func Test_Prefix_WithPrefixedItems_ReturnItemsUntilEnd(t *testing.T) {
 		"_test": "test",
 	}
 	iter := IterFromStringKeyMap(items)
-	iter = NewPrefixIterator([]byte("_"), iter)
+	iter = NewPrefixIterator([]byte("_"), iter, false)
 
 	vals, errs := Consume(context.TODO(), iter)
 
@@ -49,7 +49,7 @@ func Test_Prefix_WithItemsBeforePrefix_NextSkipsThatDoNotContainPrefix(t *testin
 		"112": "112",
 	}
 	iter := IterFromStringKeyMap(items)
-	iter = NewPrefixIterator([]byte("1"), iter)
+	iter = NewPrefixIterator([]byte("1"), iter, false)
 
 	err := iter.Next(context.TODO())
 	require.NoError(t, err)
@@ -68,7 +68,7 @@ func Test_Prefix_WithItemsAfterPrefix_ReturnsNoItemsWithoutPrefix(t *testing.T) 
 		"333": "333",
 	}
 	iter := IterFromStringKeyMap(items)
-	iter = NewPrefixIterator([]byte("1"), iter)
+	iter = NewPrefixIterator([]byte("1"), iter, false)
 
 	vals, errs := Consume(context.TODO(), iter)
 	require.Empty(t, errs)

@@ -102,15 +102,6 @@ func (a *PairsIter[T]) Close() error {
 	return nil
 }
 
-func (a *PairsIter[T]) GetParams() IteratorOpt {
-	return IteratorOpt{
-		start:   nil,
-		end:     nil,
-		prefix:  nil,
-		reverse: false,
-	}
-}
-
 func (a *PairsIter[T]) CurrentKey() []byte {
 	if a.done {
 		return nil

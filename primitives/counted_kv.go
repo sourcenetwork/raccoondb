@@ -9,7 +9,6 @@ import (
 	"fmt"
 
 	"github.com/sourcenetwork/raccoondb/v2/errors"
-	"github.com/sourcenetwork/raccoondb/v2/iterator"
 	"github.com/sourcenetwork/raccoondb/v2/store"
 	"github.com/sourcenetwork/raccoondb/v2/types"
 )
@@ -87,7 +86,7 @@ func (s *countedKVStore) Has(ctx context.Context, key []byte) (bool, error) {
 	return has, nil
 }
 
-func (s *countedKVStore) Iterate(ctx context.Context, opts iterator.IteratorOpt) (iterator.Iterator[[]byte], error) {
+func (s *countedKVStore) Iterate(ctx context.Context, opts store.IteratorOpt) (store.StoreIterator[[]byte], error) {
 	iter, err := s.vals.Iterate(ctx, opts)
 	if err != nil {
 		return nil, fmt.Errorf("%w: iterate: %w", ErrCountedKVStore, err)

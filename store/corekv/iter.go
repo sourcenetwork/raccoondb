@@ -4,16 +4,16 @@ import (
 	"context"
 
 	"github.com/sourcenetwork/corekv"
-	"github.com/sourcenetwork/raccoondb/v2/iterator"
+	"github.com/sourcenetwork/raccoondb/v2/store"
 	"github.com/sourcenetwork/raccoondb/v2/types"
 )
 
-var _ (iterator.Iterator[[]byte]) = (*iterAdapter)(nil)
+var _ (store.StoreIterator[[]byte]) = (*iterAdapter)(nil)
 
 // iterAdapter adapts a corekv Iterator into a racoon iterator
 type iterAdapter struct {
 	iter        corekv.Iterator
-	params      iterator.IteratorOpt
+	params      store.IteratorOpt
 	initialized bool
 }
 
@@ -51,7 +51,7 @@ func (i *iterAdapter) Close() error {
 	return nil
 }
 
-func (i *iterAdapter) GetParams() iterator.IteratorOpt {
+func (i *iterAdapter) GetParams() store.IteratorOpt {
 	return i.params
 }
 
