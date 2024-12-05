@@ -51,7 +51,7 @@ func (a *storeAdapter) Has(ctx context.Context, key []byte) (bool, error) {
 	return has, nil
 }
 
-func (a *storeAdapter) Iterate(ctx context.Context, opt store.IteratorOpt) (store.StoreIterator[[]byte], error) {
+func (a *storeAdapter) Iterate(ctx context.Context, opt store.IterationParam) (store.StoreIterator[[]byte], error) {
 	o := corekv.IterOptions{
 		Start:   opt.GetLeftBound(),
 		End:     opt.GetRightBound(),

@@ -84,7 +84,7 @@ func (s *KeyObjectStore[Obj]) Has(ctx context.Context, key []byte) (bool, error)
 	return has, nil
 }
 
-func (s *KeyObjectStore[Obj]) Iterate(ctx context.Context, opts store.IteratorOpt) (store.StoreIterator[Obj], error) {
+func (s *KeyObjectStore[Obj]) Iterate(ctx context.Context, opts store.IterationParam) (store.StoreIterator[Obj], error) {
 	iter, err := s.kv.Iterate(ctx, opts)
 	if err != nil {
 		return nil, newErrKeyObject("Iterate", "creating iterator", err)

@@ -10,6 +10,8 @@ const batchSize uint = 100
 
 // DeleteAll iterates over kv and deletes all records.
 func DeleteAll(ctx context.Context, kv KVStore) error {
+	// FIXME this isn't working, need to make it a batch
+
 	// create it, batchSize keys to memory
 	// delete
 	// repeat until take / consume yiels no items
@@ -38,11 +40,12 @@ func DeleteAll(ctx context.Context, kv KVStore) error {
 	return nil
 }
 
-// IteratePrefix does a prefix Iteration on a Iterable store
-// The prefix is added to the opt stary range
-// and the result iterator is wrapped in a prefix iterator
-// to stop yielding after the prefix is no longer found.
-func IteratePrefix[T any](ctx context.Context, iterable Iterable[T], prefix []byte, opt IteratorOpt, stripPrefix bool) (iterator.Iterator[T], error) {
+// IteratePrefix does a prefix Iteration on a Iterable store.
+//
+// IteratePrefix is a more performant option to doing prefix iteration, as opposed to an iterator.PrefixIterator,
+// since it can leverage the underlying KV start iteration range.
+// In practice it means the start point will be found through binary search, as opposed to a linear scan.
+func IteratePrefix[T any](ctx context.Context, iterable Iterable[T], prefix []byte, opt IterationParam, stripPrefix bool) (iterator.Iterator[T], error) {
 	start := opt.GetLeftBound()
 	start = ConcatKey(prefix, start)
 	opt = opt.WithLeftBound(start)

@@ -21,7 +21,7 @@ func newWrappedIter(iter cmdb.Iterator) store.StoreIterator[[]byte] {
 
 type iterWrapper struct {
 	i           cmdb.Iterator
-	params      store.IteratorOpt
+	params      store.IterationParam
 	initialized bool
 	finished    bool
 }
@@ -69,7 +69,7 @@ func (i *iterWrapper) Close() error {
 	return nil
 }
 
-func (i *iterWrapper) GetParams() store.IteratorOpt {
+func (i *iterWrapper) GetParams() store.IterationParam {
 	return i.params
 }
 

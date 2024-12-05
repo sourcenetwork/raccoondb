@@ -119,7 +119,7 @@ func (s *Table[T]) Get(ctx context.Context, key []byte) (types.Option[T], error)
 	return opt, nil
 }
 
-func (s *Table[T]) Iterate(ctx context.Context, opt store.IteratorOpt) (store.StoreIterator[T], error) {
+func (s *Table[T]) Iterate(ctx context.Context, opt store.IterationParam) (store.StoreIterator[T], error) {
 	iter, err := s.objStore.Iterate(ctx, opt)
 	if err != nil {
 		return nil, newTableErr("Iterate", "creating iterator", err)

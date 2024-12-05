@@ -19,13 +19,13 @@ type KeyCreated bool
 type StoreIterator[T any] interface {
 	iterator.Iterator[T]
 	// GetParams returns the control options specifying the iterator
-	GetParams() IteratorOpt
+	GetParams() IterationParam
 }
 
 // Iterable models a store which can be iterated over
 type Iterable[T any] interface {
 	// Iterate returns an iterator which walks through the stored pairs
-	Iterate(ctx context.Context, opt IteratorOpt) (StoreIterator[T], error)
+	Iterate(ctx context.Context, opt IterationParam) (StoreIterator[T], error)
 }
 
 // ReadStore is a subset of KVStore which contains read only methods

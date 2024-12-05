@@ -13,7 +13,7 @@ var _ (store.StoreIterator[[]byte]) = (*iterAdapter)(nil)
 // iterAdapter adapts a corekv Iterator into a racoon iterator
 type iterAdapter struct {
 	iter        corekv.Iterator
-	params      store.IteratorOpt
+	params      store.IterationParam
 	initialized bool
 }
 
@@ -51,7 +51,7 @@ func (i *iterAdapter) Close() error {
 	return nil
 }
 
-func (i *iterAdapter) GetParams() store.IteratorOpt {
+func (i *iterAdapter) GetParams() store.IterationParam {
 	return i.params
 }
 

@@ -92,7 +92,7 @@ func (kv *PrefixStore) Delete(ctx context.Context, key []byte) (store.KeyRemoved
 	return deleted, nil
 }
 
-func (kv *PrefixStore) Iterate(ctx context.Context, opt store.IteratorOpt) (store.StoreIterator[[]byte], error) {
+func (kv *PrefixStore) Iterate(ctx context.Context, opt store.IterationParam) (store.StoreIterator[[]byte], error) {
 	iter, err := store.IteratePrefix(ctx, kv.store, kv.prefix, opt, true)
 	if err != nil {
 		return nil, newPrefixErr("Iterator", "creating iterator", err)

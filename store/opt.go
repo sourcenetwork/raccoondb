@@ -1,8 +1,7 @@
 package store
 
-// IteratorOpt configures the behavior of an Iterator
-// TODO improve this UX
-type IteratorOpt struct {
+// IterationParam sets the params for Iterating over a Store
+type IterationParam struct {
 	// start represents the lower bound of iteration
 	// If nil will start at the smallest element
 	start []byte
@@ -15,46 +14,53 @@ type IteratorOpt struct {
 	reverse bool
 }
 
-// NewOpenIterator returns an Iterator Option which steps through all keys in a store
-func NewOpenIterator() IteratorOpt {
-	return IteratorOpt{}
+// NewOpenIterator returns an IterationParam which does a full table scan
+func NewOpenIterator() IterationParam {
+	return IterationParam{}
 }
 
-// NewOpenIterator returns an Iterator Option which steps through all keys in a store
-func NewBoundIterator(start, end []byte) IteratorOpt {
-	return IteratorOpt{
+// NewBoundIterator returns an IteratorParam bound to start and end key
+func NewBoundIterator(start, end []byte) IterationParam {
+	return IterationParam{
 		start: start,
 		end:   end,
 	}
 }
 
-func (o IteratorOpt) WithReverse(reverse bool) IteratorOpt {
+// WithReverse can be set to True in order to do revese iteration
+func (o IterationParam) WithReverse(reverse bool) IterationParam {
 	o.reverse = reverse
 	return o
 }
 
-func (o IteratorOpt) IsReverse() bool {
+// IsReverse is true if the Iteration is supposed to be reversed
+func (o IterationParam) IsReverse() bool {
 	return o.reverse
 }
 
-func (o IteratorOpt) WithLeftBound(start []byte) IteratorOpt {
+// WithLeftBound sets the start point for iteration
+func (o IterationParam) WithLeftBound(start []byte) IterationParam {
 	o.start = start
 	return o
 }
 
-func (o IteratorOpt) WithRightBound(end []byte) IteratorOpt {
+// WithRightBound sets the end point for iteration
+func (o IterationParam) WithRightBound(end []byte) IterationParam {
 	o.end = end
 	return o
 }
 
-func (o IteratorOpt) IsOpen() bool {
+// IsOpen is true if the Iteration is unbound (ie full scan)
+func (o IterationParam) IsOpen() bool {
 	return o.start == nil && o.end == nil
 }
 
-func (o IteratorOpt) GetRightBound() []byte {
+// GetRightBound returns the end interval of the iterator (nil if not set)
+func (o IterationParam) GetRightBound() []byte {
 	return o.end
 }
 
-func (o IteratorOpt) GetLeftBound() []byte {
+// GetLeftBound returns the start point of the iterator (nil if not set)
+func (o IterationParam) GetLeftBound() []byte {
 	return o.start
 }

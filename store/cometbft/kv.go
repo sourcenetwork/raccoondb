@@ -49,7 +49,7 @@ func (k *kvWrapper) Has(ctx context.Context, key []byte) (bool, error) {
 	return has, nil
 }
 
-func (k *kvWrapper) Iterate(ctx context.Context, opt store.IteratorOpt) (store.StoreIterator[[]byte], error) {
+func (k *kvWrapper) Iterate(ctx context.Context, opt store.IterationParam) (store.StoreIterator[[]byte], error) {
 	var iter cmdb.Iterator
 	var err error
 	if opt.IsReverse() {

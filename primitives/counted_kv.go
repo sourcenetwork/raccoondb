@@ -86,7 +86,7 @@ func (s *countedKVStore) Has(ctx context.Context, key []byte) (bool, error) {
 	return has, nil
 }
 
-func (s *countedKVStore) Iterate(ctx context.Context, opts store.IteratorOpt) (store.StoreIterator[[]byte], error) {
+func (s *countedKVStore) Iterate(ctx context.Context, opts store.IterationParam) (store.StoreIterator[[]byte], error) {
 	iter, err := s.vals.Iterate(ctx, opts)
 	if err != nil {
 		return nil, fmt.Errorf("%w: iterate: %w", ErrCountedKVStore, err)

@@ -9,7 +9,9 @@ import (
 
 var _ StoreIterator[any] = (*iterAdapter[any])(nil)
 
-func ToStoreIter[T any](iter iterator.Iterator[T], opt IteratorOpt) StoreIterator[T] {
+// ToStoreIter is an adaptor which returns a StoreIterator from an iterator.Iterator
+// The StoreIterator returns the given param when GetParams() is called
+func ToStoreIter[T any](iter iterator.Iterator[T], opt IterationParam) StoreIterator[T] {
 	return &iterAdapter[T]{
 		iter: iter,
 		opt:  opt,
@@ -18,7 +20,7 @@ func ToStoreIter[T any](iter iterator.Iterator[T], opt IteratorOpt) StoreIterato
 
 type iterAdapter[T any] struct {
 	iter iterator.Iterator[T]
-	opt  IteratorOpt
+	opt  IterationParam
 }
 
 func (i *iterAdapter[T]) Next(ctx context.Context) error {
@@ -37,7 +39,7 @@ func (i *iterAdapter[T]) Close() error {
 	return i.iter.Close()
 }
 
-func (i *iterAdapter[T]) GetParams() IteratorOpt {
+func (i *iterAdapter[T]) GetParams() IterationParam {
 	return i.opt
 }
 
