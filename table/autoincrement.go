@@ -9,6 +9,18 @@ import (
 	"github.com/sourcenetwork/raccoondb/v2/types"
 )
 
+func NewAutoIncrementer[T any](t *Table[T], getter IDGetter[T], setter IDSetter[T]) *Autoincrementer[T] {
+	counterKv := primitives.NewPrefixedKV(t.baseStore, []byte(counterPrefix))
+	counter := primitives.NewCounterStore(counterKv)
+	return &Autoincrementer[T]{
+		table:   t,
+		counter: counter,
+		setter:  setter,
+		getter:  getter,
+	}
+}
+
+const counterPrefix string = "counter/"
 const counterKey string = "id"
 
 // IDSetter models a hook which is used by AutoincrementTable
@@ -23,23 +35,23 @@ type IDGetter[T any] func(obj *T) uint64
 // which is used to generate Identifiers for objects stored in Table.
 //
 // Identifiers are unsigned integers, which are marshaled using big endian encoding.
-type AutoincrementTable[T any] struct {
-	*Table[T]
+type Autoincrementer[T any] struct {
+	table   *Table[T]
 	counter primitives.CounterStore
-	Setter  IDSetter[T]
-	Getter  IDGetter[T]
+	setter  IDSetter[T]
+	getter  IDGetter[T]
 }
 
 // Insert adds obj to the table.
 // Fetches the next free ID from the table counter and sets it in obj
-func (t *AutoincrementTable[T]) Insert(ctx context.Context, obj *T) error {
+func (t *Autoincrementer[T]) Insert(ctx context.Context, obj *T) error {
 	id, err := t.counter.GetNext(ctx, []byte(counterKey))
 	if err != nil {
 		return err
 	}
-	t.Setter(obj, id)
+	t.setter(obj, id)
 
-	_, err = t.Table.Set(ctx, marshal.EncodeUInt(id), *obj)
+	_, err = t.table.Set(ctx, marshal.EncodeUInt(id), *obj)
 	if err != nil {
 		return err
 	}
@@ -53,8 +65,8 @@ func (t *AutoincrementTable[T]) Insert(ctx context.Context, obj *T) error {
 }
 
 // GetByID returns the object stored with the given integer id
-func (t *AutoincrementTable[T]) GetByID(ctx context.Context, id uint64) (types.Option[T], error) {
-	opt, err := t.Table.Get(ctx, []byte(counterKey))
+func (t *Autoincrementer[T]) GetByID(ctx context.Context, id uint64) (types.Option[T], error) {
+	opt, err := t.table.Get(ctx, []byte(counterKey))
 	if err != nil {
 		return types.None[T](), err
 	}
@@ -62,8 +74,8 @@ func (t *AutoincrementTable[T]) GetByID(ctx context.Context, id uint64) (types.O
 }
 
 // DeleteByID removes the object stored with the given integer id
-func (t *AutoincrementTable[T]) DeleteByID(ctx context.Context, id uint64) (store.KeyRemoved, error) {
-	removed, err := t.Table.Delete(ctx, marshal.EncodeUInt(id))
+func (t *Autoincrementer[T]) DeleteByID(ctx context.Context, id uint64) (store.KeyRemoved, error) {
+	removed, err := t.table.Delete(ctx, marshal.EncodeUInt(id))
 	if err != nil {
 		return false, err
 	}

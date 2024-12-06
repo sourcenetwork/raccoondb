@@ -9,6 +9,8 @@ import (
 	"github.com/sourcenetwork/raccoondb/v2/store"
 )
 
+var _ store.Iterable[[]byte] = (*FieldIndexStore)(nil)
+
 // ErrFieldIndex is a top level error for all errors produced by FieldIndexStore
 var ErrFieldIndex = errors.New("FieldIndexStore")
 
@@ -162,11 +164,20 @@ func (s *FieldIndexStore) GetIndexedItemsCount(ctx context.Context) (uint64, err
 	return count, nil
 }
 
-// Wipe removes all entries from FieldIndexStore
-func (s *FieldIndexStore) Wipe(ctx context.Context) error {
-	err := store.DeleteAll(ctx, s.baseKv)
+// Iterate iterates over all entries in store
+func (s *FieldIndexStore) Iterate(ctx context.Context, param store.IterationParam) (store.StoreIterator[[]byte], error) {
+	iter, err := s.idx.Iterate(ctx, param)
 	if err != nil {
-		return newFieldIndexErr("Wipe", "DeleteAll", err)
+		return nil, newFieldIndexErr("Iterate", "creating iterator", err)
+	}
+	return iter, nil
+}
+
+// Wipe deletes all entries in store
+func (s *FieldIndexStore) Wipe(ctx context.Context) error {
+	err := store.DeleteAll(ctx, s.idx)
+	if err != nil {
+		return newFieldIndexErr("Wipe", "", err)
 	}
 	return nil
 }

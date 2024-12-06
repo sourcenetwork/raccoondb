@@ -82,6 +82,9 @@ type IndexReader[T, I any] interface {
 
 	// Has returns true if bucket contains the given key
 	Has(ctx context.Context, bucket *I, key []byte) (bool, error)
+
+	// Iterate walks through all elements in index
+	Iterate(ctx context.Context, opt store.IterationParam) (store.StoreIterator[[]byte], error)
 }
 
 // tableIndex wraps FieldIndexStore abstracting the step of marshaling
@@ -218,4 +221,12 @@ func (i *tableIndex[T, I]) Wipe(ctx context.Context) error {
 		return newIndexErr("Wipe", "wipe all", err)
 	}
 	return nil
+}
+
+func (i *tableIndex[T, I]) Iterate(ctx context.Context, opt store.IterationParam) (store.StoreIterator[[]byte], error) {
+	iter, err := i.index.Iterate(ctx, opt)
+	if err != nil {
+		return nil, newIndexErr("Iterate", "", err)
+	}
+	return iter, nil
 }
