@@ -88,3 +88,33 @@ func (m BytesMarshaler) Marshal(bytes *[]byte) ([]byte, error) {
 func (m BytesMarshaler) Unmarshal(bytes []byte) ([]byte, error) {
 	return bytes, nil
 }
+
+// EncodeInt64 converts a int64 into a ones complement representation with a sign bit where 0 is negative and 1 is positive.
+// Stores the result in a byte slice using big endian ordering.
+// The resulting byte representation is comparable wrt the original values
+func EncodeInt64(i int64) []byte {
+	var j uint64
+	if i > 0 {
+		j = uint64(i)
+		j = j | (1 << 63) // sets the MSB of j as 1 for positive
+	} else {
+		//makes i positive, flips its bits and sets the MSB as 0 in order to make negative number smaller than positive ones
+		j = ^uint64(-i) & ^uint64(1<<63)
+	}
+	return EncodeUInt(j)
+}
+
+// DecodeInt64 converts a byte slice of a signed prefixed int64 into its original value.
+func DecodeInt64(bytes []byte) int64 {
+	var i int64
+
+	ui := DecodeUInt(bytes)
+	if ui>>63 == 1 { // pos number since MSB is 1
+		ui = ui & ^uint64(1<<63) // sets the MSB to 0
+		i = int64(ui)
+	} else {
+		ui = ^(ui | uint64(1<<63))
+		i = -int64(ui)
+	}
+	return i
+}

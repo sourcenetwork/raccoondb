@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"bytes"
 	"sort"
 )
 
@@ -20,8 +21,8 @@ type Sortable[T any] struct {
 // Extractor extracts an Ordered value from a type T
 type Extractor[T any, K Ordered] func(T) K
 
-// Comparator is a function which compares whether left is less than right
-// returns true if it is else false
+// Comparator is a function which returns true if left is less than right
+// else false
 type Comparator[T any] func(left, right T) bool
 
 // FromExtractor builds a Sortable from a slice of values and an extractor function.
@@ -39,6 +40,10 @@ func FromExtractor[T any, K Ordered](vals []T, extractor Extractor[T, K]) Sortab
 		ts:         vals,
 		comparator: comparator,
 	}
+}
+
+func LexographicBytesComparator(left, right []byte) bool {
+	return bytes.Compare(left, right) == -1
 }
 
 // FromComparator creates a Sortable from a comparator function which takes two instances of T and returns
