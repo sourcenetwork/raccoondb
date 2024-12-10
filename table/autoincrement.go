@@ -66,7 +66,17 @@ func (t *Autoincrementer[T]) Insert(ctx context.Context, obj *T) error {
 
 // GetByID returns the object stored with the given integer id
 func (t *Autoincrementer[T]) GetByID(ctx context.Context, id uint64) (types.Option[T], error) {
-	opt, err := t.table.Get(ctx, []byte(counterKey))
+	opt, err := t.table.Get(ctx, marshal.EncodeUInt(id))
+	if err != nil {
+		return types.None[T](), err
+	}
+	return opt, nil
+}
+
+// GetByID returns the object stored with the given integer id
+func (t *Autoincrementer[T]) GetByRecordID(ctx context.Context, record *T) (types.Option[T], error) {
+	intId := t.getter(record)
+	opt, err := t.GetByID(ctx, intId)
 	if err != nil {
 		return types.None[T](), err
 	}

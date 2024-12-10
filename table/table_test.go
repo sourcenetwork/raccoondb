@@ -117,7 +117,7 @@ func Test_Table_IterateBuckets_ReturnsAllBuckets(t *testing.T) {
 	table.Set(ctx, []byte("b"), Record{"bob"})
 	table.Set(ctx, []byte("a"), Record{"alice"})
 
-	iter, err := idx.IterateBuckets(ctx, store.NewOpenIterator())
+	iter, err := idx.IterateBuckets(ctx, NewOpenIterator[string]())
 	require.NoError(t, err)
 
 	buckets, errs := iterator.Consume(ctx, iter)

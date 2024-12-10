@@ -78,13 +78,13 @@ type IndexReader[T, I any] interface {
 
 	// IterateBuckets returns an iterator which yields all buckets
 	// which contains at least one object
-	IterateBuckets(ctx context.Context, opt store.IterationParam) (iterator.Iterator[I], error)
+	IterateBuckets(ctx context.Context, opt BucketIterationParam[I]) (iterator.Iterator[I], error)
 
 	// Has returns true if bucket contains the given key
 	Has(ctx context.Context, bucket *I, key []byte) (bool, error)
 
-	// Iterate walks through all elements in index
-	Iterate(ctx context.Context, opt store.IterationParam) (store.StoreIterator[[]byte], error)
+	// Iterate walks through all keys indexed
+	Iterate(ctx context.Context, opt BucketIterationParam[I]) (store.StoreIterator[[]byte], error)
 }
 
 // tableIndex wraps FieldIndexStore abstracting the step of marshaling
@@ -111,10 +111,15 @@ func (i *tableIndex[T, I]) IterateKeys(ctx context.Context, bucket *I, opt store
 }
 
 // IterateValues returns an iterator which steps though the buckets / values in the index
-func (i *tableIndex[T, I]) IterateBuckets(ctx context.Context, opt store.IterationParam) (iterator.Iterator[I], error) {
-	iter, err := i.index.IterateBuckets(ctx, opt)
+func (i *tableIndex[T, I]) IterateBuckets(ctx context.Context, opt BucketIterationParam[I]) (iterator.Iterator[I], error) {
+	param, err := mapIterParam(opt, i.marshaler)
 	if err != nil {
-		return nil, newIndexErr("IterateValues", "creating iterator", err)
+		return nil, newIndexErr("IterateBuckets", "mapping params", err)
+	}
+
+	iter, err := i.index.IterateBuckets(ctx, param)
+	if err != nil {
+		return nil, newIndexErr("IterateBuckets", "creating iterator", err)
 	}
 
 	valIter := iterator.MapFailable(iter, func(bytes []byte) (I, error) {
@@ -223,10 +228,37 @@ func (i *tableIndex[T, I]) Wipe(ctx context.Context) error {
 	return nil
 }
 
-func (i *tableIndex[T, I]) Iterate(ctx context.Context, opt store.IterationParam) (store.StoreIterator[[]byte], error) {
-	iter, err := i.index.Iterate(ctx, opt)
+func (i *tableIndex[T, I]) Iterate(ctx context.Context, opt BucketIterationParam[I]) (store.StoreIterator[[]byte], error) {
+	param, err := mapIterParam(opt, i.marshaler)
+	if err != nil {
+		return nil, newIndexErr("Iterate", "mapping params", err)
+	}
+	iter, err := i.index.Iterate(ctx, param)
 	if err != nil {
 		return nil, newIndexErr("Iterate", "", err)
 	}
 	return iter, nil
+}
+
+func mapIterParam[I any](bucketParam BucketIterationParam[I], marshaler marshal.Marshaler[I]) (store.IterationParam, error) {
+	params := store.IterationParam{}
+	if !bucketParam.end.Empty() {
+		val := bucketParam.end.GetValue()
+		rightBound, err := marshaler.Marshal(&val)
+		if err != nil {
+			return store.IterationParam{}, err
+		}
+		params = params.WithRightBound(rightBound)
+	}
+	if !bucketParam.start.Empty() {
+		val := bucketParam.start.GetValue()
+		leftBound, err := marshaler.Marshal(&val)
+		if err != nil {
+			return store.IterationParam{}, err
+		}
+		params = params.WithLeftBound(leftBound)
+	}
+	params.WithReverse(params.IsReverse())
+	return params, nil
+
 }
