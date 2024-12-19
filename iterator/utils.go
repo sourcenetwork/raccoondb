@@ -3,6 +3,7 @@ package iterator
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 )
 
@@ -15,12 +16,12 @@ func Skip[T any](ctx context.Context, n uint, iter Iterator[T]) {
 
 // Consume consumes the iterator and accumulates its items onto a slice.
 // Note: Closes the iterator
-func Consume[T any](ctx context.Context, iter Iterator[T]) ([]T, []error) {
-	var errors []error
+func Consume[T any](ctx context.Context, iter Iterator[T]) ([]T, error) {
+	var errs []error
 	var items []T
 	err := iter.Next(ctx)
 	if err != nil {
-		errors = append(errors, err)
+		errs = append(errs, err)
 	}
 	for !iter.Finished() {
 		opt := iter.Value()
@@ -30,15 +31,18 @@ func Consume[T any](ctx context.Context, iter Iterator[T]) ([]T, []error) {
 
 		err := iter.Next(ctx)
 		if err != nil {
-			errors = append(errors, err)
+			errs = append(errs, err)
 			continue
 		}
 	}
 	err = iter.Close()
 	if err != nil {
-		errors = append(errors, err)
+		errs = append(errs, err)
 	}
-	return items, errors
+	if len(errs) > 0 {
+		return items, errors.Join(errs...)
+	}
+	return items, nil
 }
 
 // IndexedValue is a pair indicating the Value and the Idx that produced the element

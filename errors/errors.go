@@ -23,11 +23,13 @@ func New(msg string) error {
 }
 
 // As returns true and sets e.msg to err.msg
-// if err is an instances RaccoonError
+// if err is an instances RaccoonError or MultiError
 func (e *RaccoonError) As(err any) bool {
-	cast, ok := err.(*RaccoonError)
-	if ok {
-		e.msg = cast.msg
+	switch errCast := err.(type) {
+	case *RaccoonError:
+		e.msg = errCast.msg
+		return true
+	default:
+		return false
 	}
-	return ok
 }

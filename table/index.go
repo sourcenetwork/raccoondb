@@ -52,8 +52,8 @@ type indexWrite[T any] interface {
 	// extracted from old and adds it to new
 	UpdateIndex(ctx context.Context, key []byte, old *T, new *T) error
 
-	// Wipe removes all entries from the index
-	Wipe(ctx context.Context) error
+	// Drop removes all entries from the index
+	Drop(ctx context.Context) error
 }
 
 type IndexCatalogue interface {
@@ -220,10 +220,10 @@ func (i *tableIndex[T, I]) Has(ctx context.Context, bucket *I, key []byte) (bool
 	return has, nil
 }
 
-func (i *tableIndex[T, I]) Wipe(ctx context.Context) error {
+func (i *tableIndex[T, I]) Drop(ctx context.Context) error {
 	err := i.index.Wipe(ctx)
 	if err != nil {
-		return newIndexErr("Wipe", "wipe all", err)
+		return newIndexErr("Drop", "wipe all", err)
 	}
 	return nil
 }

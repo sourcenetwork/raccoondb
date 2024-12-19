@@ -64,6 +64,17 @@ func (t *Autoincrementer[T]) Insert(ctx context.Context, obj *T) error {
 	return nil
 }
 
+// Update modifies record in the table.
+// Fetches the current ID from obj and updates the record with the recovered ID.
+func (t *Autoincrementer[T]) Update(ctx context.Context, obj *T) error {
+	id := t.getter(obj)
+	_, err := t.table.Set(ctx, marshal.EncodeUInt(id), *obj)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // GetByID returns the object stored with the given integer id
 func (t *Autoincrementer[T]) GetByID(ctx context.Context, id uint64) (types.Option[T], error) {
 	opt, err := t.table.Get(ctx, marshal.EncodeUInt(id))

@@ -164,7 +164,7 @@ func (s *FieldIndexStore) GetIndexedItemsCount(ctx context.Context) (uint64, err
 	return count, nil
 }
 
-// Iterate iterates over all entries in store
+// Iterate iterates over all keys indexed in store
 func (s *FieldIndexStore) Iterate(ctx context.Context, param store.IterationParam) (store.StoreIterator[[]byte], error) {
 	iter, err := s.idx.Iterate(ctx, param)
 	if err != nil {

@@ -139,7 +139,7 @@ func (s *Table[T]) Has(ctx context.Context, key []byte) (bool, error) {
 // and reinserts it using the latest state of stored objects
 func (s *Table[T]) UpateIndexes(ctx context.Context) error {
 	for _, idx := range s.indexes {
-		err := idx.Wipe(ctx)
+		err := idx.Drop(ctx)
 		if err != nil {
 			return newTableErr("UpdateIndexes", "wiping indexes", err)
 		}
