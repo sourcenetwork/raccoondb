@@ -6,7 +6,7 @@ toolchain go1.23.3
 
 require (
 	github.com/cometbft/cometbft-db v1.0.1
-	github.com/sourcenetwork/corekv v0.0.0-20240103085857-b4c7666ba155
+	github.com/sourcenetwork/corekv v0.0.0-20250113161442-51f8345551c7
 	github.com/stretchr/testify v1.9.0
 )
 

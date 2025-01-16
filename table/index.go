@@ -258,7 +258,6 @@ func mapIterParam[I any](bucketParam BucketIterationParam[I], marshaler marshal.
 		}
 		params = params.WithLeftBound(leftBound)
 	}
-	params.WithReverse(params.IsReverse())
+	params = params.WithReverse(params.IsReverse())
 	return params, nil
-
 }

@@ -32,7 +32,12 @@ func (i *iterAdapter) Value() types.Option[[]byte] {
 		return types.None[[]byte]()
 	}
 
-	bytes := i.iter.Value()
+	bytes, err := i.iter.Value()
+	if err != nil {
+		panic(err)
+		// FIXME need to fix this due to corekv's new interface
+	}
+
 	if bytes == nil {
 		return types.None[[]byte]()
 	}

@@ -18,8 +18,8 @@ func Test_Prefix_WhithoutPrefix_ReturnsNoItems(t *testing.T) {
 
 	vals, errs := Consume(context.TODO(), iter)
 
-	require.Len(t, vals, 0, "vals got %v", vals)
-	require.Len(t, errs, 0, "err got %v", vals)
+	require.NoError(t, errs)
+	require.Empty(t, vals)
 }
 
 func Test_Prefix_WithPrefixedItems_ReturnItemsUntilEnd(t *testing.T) {
@@ -31,15 +31,15 @@ func Test_Prefix_WithPrefixedItems_ReturnItemsUntilEnd(t *testing.T) {
 	iter := IterFromStringKeyMap(items)
 	iter = NewPrefixIterator([]byte("_"), iter, false)
 
-	vals, errs := Consume(context.TODO(), iter)
+	vals, err := Consume(context.TODO(), iter)
 
+	require.NoError(t, err)
 	want := []string{
 		"abc",
 		"def",
 		"test",
 	}
 	require.Equal(t, want, vals)
-	require.Len(t, errs, 0, "err got %v", vals)
 }
 
 func Test_Prefix_WithItemsBeforePrefix_NextSkipsThatDoNotContainPrefix(t *testing.T) {

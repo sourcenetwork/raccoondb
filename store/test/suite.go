@@ -165,8 +165,7 @@ func test_Iterate_ReturnsIteratorOverAllItems(t *testing.T, kv store.KVStore) {
 
 	require.Nil(t, iter.CurrentKey())
 	opt := iter.Value()
-	t.Logf("%v", opt)
-	require.True(t, opt.Empty())
+	require.True(t, opt.Empty(), "opt should be empty")
 
 	// initializes iterator
 	err = iter.Next(ctx)
@@ -174,6 +173,7 @@ func test_Iterate_ReturnsIteratorOverAllItems(t *testing.T, kv store.KVStore) {
 
 	for i := 0; !iter.Finished(); i++ {
 		opt := iter.Value()
+		t.Logf("%v", opt)
 		require.False(t, opt.Empty())
 
 		want := testData[i]

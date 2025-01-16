@@ -28,6 +28,7 @@ func MapFailable[T, U any](iterator Iterator[T], mapper FailableMapper[T, U]) It
 	return &mapIter[T, U]{
 		inner:  iterator,
 		mapper: mapper,
+		val:    types.None[U](),
 	}
 }
 
@@ -39,15 +40,17 @@ func Map[T, U any](iterator Iterator[T], mapper Mapper[T, U]) Iterator[U] {
 	return &mapIter[T, U]{
 		inner:  iterator,
 		mapper: m,
+		val:    types.None[U](),
 	}
 }
 
 // mapIter is an iterator which applies a mapping function for every element in the inner iter
 type mapIter[T, U any] struct {
-	inner  Iterator[T]
-	mapper FailableMapper[T, U]
-	mapErr error
-	val    types.Option[U]
+	inner       Iterator[T]
+	mapper      FailableMapper[T, U]
+	mapErr      error
+	val         types.Option[U]
+	initialized bool
 }
 
 func (i *mapIter[T, U]) Next(ctx context.Context) error {

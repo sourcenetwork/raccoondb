@@ -18,7 +18,11 @@ type BucketIterationParam[T any] struct {
 
 // NewOpenIterator returns an IterationParam which does a full table scan
 func NewOpenIterator[T any]() BucketIterationParam[T] {
-	return BucketIterationParam[T]{}
+	return BucketIterationParam[T]{
+		start:   types.None[T](),
+		end:     types.None[T](),
+		reverse: false,
+	}
 }
 
 // NewBoundIterator returns an IteratorParam bound to start and end key
