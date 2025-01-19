@@ -50,7 +50,7 @@ type Iterator[T any] interface {
 
 	// Value returns the current value in the Iterator
 	// Should only return None if Next returned an error or if the Iterator is Finished
-	Value() types.Option[T]
+	Value() (types.Option[T], error)
 
 	// Finished indicates whether the Iterator scanned through all possible keys
 	Finished() bool

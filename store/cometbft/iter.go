@@ -13,48 +13,40 @@ var _ store.StoreIterator[[]byte] = (*iterWrapper)(nil)
 
 func newWrappedIter(iter cmdb.Iterator) store.StoreIterator[[]byte] {
 	return &iterWrapper{
-		i:           iter,
-		initialized: false,
-		finished:    false,
+		i:        iter,
+		finished: false,
 	}
 }
 
 type iterWrapper struct {
-	i           cmdb.Iterator
-	params      store.IterationParam
-	initialized bool
-	finished    bool
+	i        cmdb.Iterator
+	params   store.IterationParam
+	finished bool
 }
 
 func (i *iterWrapper) Next(ctx context.Context) error {
-	if !i.initialized {
-		i.initialized = true
-		// cometbft-db's iterator is created ready to use (yields first value right away)
-		// as such it may have an error set during creation
-		// if it fails to yield the first value, therefore we check for it
-		if i.i.Error() != nil {
-			return wrapErr(i.i.Error())
-		}
+	if i.finished {
 		return nil
 	}
-
 	i.i.Next()
-	err := i.i.Error()
+
 	if !i.i.Valid() {
 		i.finished = true
 	}
 
+	err := i.i.Error()
 	if err != nil {
 		return wrapErr(err)
 	}
+
 	return nil
 }
 
-func (i *iterWrapper) Value() types.Option[[]byte] {
-	if i.finished || !i.initialized {
-		return types.None[[]byte]()
+func (i *iterWrapper) Value() (types.Option[[]byte], error) {
+	if i.finished {
+		return types.None[[]byte](), nil
 	}
-	return types.Some(i.i.Value())
+	return types.Some(i.i.Value()), nil
 }
 
 func (i *iterWrapper) Finished() bool {
@@ -74,7 +66,7 @@ func (i *iterWrapper) GetParams() store.IterationParam {
 }
 
 func (i *iterWrapper) CurrentKey() []byte {
-	if i.finished || !i.initialized {
+	if i.finished {
 		return nil
 	}
 	return i.i.Key()

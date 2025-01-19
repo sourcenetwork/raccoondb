@@ -28,7 +28,6 @@ func MapFailable[T, U any](iterator Iterator[T], mapper FailableMapper[T, U]) It
 	return &mapIter[T, U]{
 		inner:  iterator,
 		mapper: mapper,
-		val:    types.None[U](),
 	}
 }
 
@@ -40,46 +39,36 @@ func Map[T, U any](iterator Iterator[T], mapper Mapper[T, U]) Iterator[U] {
 	return &mapIter[T, U]{
 		inner:  iterator,
 		mapper: m,
-		val:    types.None[U](),
 	}
 }
 
 // mapIter is an iterator which applies a mapping function for every element in the inner iter
 type mapIter[T, U any] struct {
-	inner       Iterator[T]
-	mapper      FailableMapper[T, U]
-	mapErr      error
-	val         types.Option[U]
-	initialized bool
+	inner  Iterator[T]
+	mapper FailableMapper[T, U]
+	mapErr error
 }
 
 func (i *mapIter[T, U]) Next(ctx context.Context) error {
-	err := i.inner.Next(ctx)
-	if err != nil {
-		i.val = types.None[U]()
-		return err
-	}
+	return i.inner.Next(ctx)
+}
 
-	opt := i.inner.Value()
+func (i *mapIter[T, U]) Value() (types.Option[U], error) {
+	opt, err := i.inner.Value()
+	if err != nil {
+		return types.None[U](), err
+	}
 	if opt.Empty() {
-		i.val = types.None[U]()
-		return nil
+		return types.None[U](), nil
 	}
 
 	val := opt.GetValue()
 	u, err := i.mapper(val)
 	if err != nil {
-		key := i.inner.CurrentKey()
-		i.val = types.None[U]()
-		return fmt.Errorf("elem '%v': %w: %w", string(key), ErrMapper, err)
+		return types.None[U](), fmt.Errorf("%w: %w", ErrMapper, err)
 	}
 
-	i.val = types.Some(u)
-	return nil
-}
-
-func (i *mapIter[T, U]) Value() types.Option[U] {
-	return i.val
+	return types.Some(u), nil
 }
 
 func (i *mapIter[T, U]) Finished() bool {

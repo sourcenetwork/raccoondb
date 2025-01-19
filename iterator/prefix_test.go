@@ -54,7 +54,8 @@ func Test_Prefix_WithItemsBeforePrefix_NextSkipsThatDoNotContainPrefix(t *testin
 	err := iter.Next(context.TODO())
 	require.NoError(t, err)
 
-	opt := iter.Value()
+	opt, err := iter.Value()
+	require.NoError(t, err)
 	require.False(t, opt.Empty())
 	require.Equal(t, "111", opt.GetValue())
 }

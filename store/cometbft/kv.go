@@ -61,8 +61,12 @@ func (k *kvWrapper) Iterate(ctx context.Context, opt store.IterationParam) (stor
 	if err != nil {
 		return nil, wrapErr(err)
 	}
+
 	wrapped := newWrappedIter(iter)
-	return wrapped, nil
+	// this is a bit of a weird case because if the iterator returns an error
+	// right away, for some reason, it would be lost due to the wrapping.
+	// therefore, it's better to return during creation
+	return wrapped, iter.Error()
 }
 
 func (k *kvWrapper) Set(ctx context.Context, key, value []byte) (store.KeyCreated, error) {

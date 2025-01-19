@@ -13,7 +13,7 @@ import (
 
 var testBucket []byte = []byte("bucket")
 
-func Test_FieldIndexStore_ValesInBucket_CanIter(t *testing.T) {
+func Test_FieldIndexStore_ValuesInBucket_CanIter(t *testing.T) {
 	ctx := context.TODO()
 	kv := cometbft.NewMemKV()
 	idx := NewFieldIndexStore(kv)
@@ -29,7 +29,8 @@ func Test_FieldIndexStore_ValesInBucket_CanIter(t *testing.T) {
 	iter, err := idx.IterateBucketItems(ctx, testBucket, store.NewOpenIterator())
 	require.NoError(t, err)
 
-	pairs := iterator.ConsumePairs(ctx, iter)
+	pairs, err := iterator.ConsumePairs(ctx, iter)
+	require.NoError(t, err)
 	want := []iterator.Pair[[]byte]{
 		iterator.NewPair([]byte("v1"), []byte("v1")),
 		iterator.NewPair([]byte("v2"), []byte("v2")),

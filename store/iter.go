@@ -27,7 +27,7 @@ func (i *iterAdapter[T]) Next(ctx context.Context) error {
 	return i.iter.Next(ctx)
 }
 
-func (i *iterAdapter[T]) Value() types.Option[T] {
+func (i *iterAdapter[T]) Value() (types.Option[T], error) {
 	return i.iter.Value()
 }
 

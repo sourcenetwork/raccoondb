@@ -158,7 +158,10 @@ func (s *Table[T]) UpateIndexes(ctx context.Context) error {
 		if iter.Finished() {
 			break
 		}
-		opt := iter.Value()
+		opt, err := iter.Value()
+		if err != nil {
+			return newTableErr("UpdateIndexes", "iterating over objects", err)
+		}
 		obj := opt.GetValue()
 		for _, idx := range s.indexes {
 			_, err := idx.IndexObject(ctx, iter.CurrentKey(), &obj)

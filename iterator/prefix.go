@@ -83,9 +83,9 @@ func (i *PrefixIterator[T]) CurrentKey() []byte {
 	return i.iter.CurrentKey()
 }
 
-func (i *PrefixIterator[T]) Value() types.Option[T] {
+func (i *PrefixIterator[T]) Value() (types.Option[T], error) {
 	if !i.initialized || i.finished {
-		return types.None[T]()
+		return types.None[T](), nil
 	}
 	return i.iter.Value()
 }

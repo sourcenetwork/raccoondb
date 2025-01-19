@@ -12,40 +12,37 @@ var _ (store.StoreIterator[[]byte]) = (*iterAdapter)(nil)
 
 // iterAdapter adapts a corekv Iterator into a racoon iterator
 type iterAdapter struct {
-	iter        corekv.Iterator
-	params      store.IterationParam
-	initialized bool
+	iter     corekv.Iterator
+	params   store.IterationParam
+	finished bool
 }
 
 func (i *iterAdapter) Next(_ context.Context) error {
-	if !i.initialized {
-		i.initialized = true
-		return nil
-	}
-
 	i.iter.Next()
+	if !i.iter.Valid() {
+		i.finished = true
+	}
 	return nil
 }
 
-func (i *iterAdapter) Value() types.Option[[]byte] {
-	if i.Finished() || !i.initialized {
-		return types.None[[]byte]()
+func (i *iterAdapter) Value() (types.Option[[]byte], error) {
+	if i.finished {
+		return types.None[[]byte](), nil
 	}
 
 	bytes, err := i.iter.Value()
 	if err != nil {
-		panic(err)
-		// FIXME need to fix this due to corekv's new interface
+		return types.None[[]byte](), err
 	}
 
 	if bytes == nil {
-		return types.None[[]byte]()
+		return types.None[[]byte](), nil
 	}
-	return types.Some(bytes)
+	return types.Some(bytes), nil
 }
 
 func (i *iterAdapter) Finished() bool {
-	return !i.iter.Valid()
+	return i.finished
 }
 
 func (i *iterAdapter) Close() error {
@@ -61,7 +58,7 @@ func (i *iterAdapter) GetParams() store.IterationParam {
 }
 
 func (i *iterAdapter) CurrentKey() []byte {
-	if i.Finished() || !i.initialized {
+	if i.finished {
 		return nil
 	}
 	return i.iter.Key()

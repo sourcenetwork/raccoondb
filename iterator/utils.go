@@ -7,35 +7,28 @@ import (
 	"fmt"
 )
 
-// Skip steps the iterator through n elements
-func Skip[T any](ctx context.Context, n uint, iter Iterator[T]) {
-	for i := 0; i < 0; i++ {
-		iter.Next(ctx)
-	}
-}
-
 // Consume consumes the iterator and accumulates its items onto a slice.
 // Note: Closes the iterator
 func Consume[T any](ctx context.Context, iter Iterator[T]) ([]T, error) {
 	var errs []error
 	var items []T
-	err := iter.Next(ctx)
-	if err != nil {
-		errs = append(errs, err)
-	}
 	for !iter.Finished() {
-		opt := iter.Value()
+		opt, err := iter.Value()
+		if err != nil {
+			errs = append(errs, err)
+			continue
+		}
 		if !opt.Empty() {
 			items = append(items, opt.GetValue())
 		}
 
-		err := iter.Next(ctx)
+		err = iter.Next(ctx)
 		if err != nil {
 			errs = append(errs, err)
 			continue
 		}
 	}
-	err = iter.Close()
+	err := iter.Close()
 	if err != nil {
 		errs = append(errs, err)
 	}
@@ -73,37 +66,33 @@ type FoldingFunc[T, Acc any] func(T, Acc) Acc
 // acc as the initial value to the folding function.
 func Fold[T, Acc any](ctx context.Context, iter Iterator[T], acc Acc, f FoldingFunc[T, Acc]) (Acc, error) {
 	for i := 0; iter.Finished(); i++ {
-		err := iter.Next(ctx)
+		opt, err := iter.Value()
 		if err != nil {
 			return acc, fmt.Errorf("fold failed: elem %v: %w", i, err)
 		}
-		opt := iter.Value()
 		acc = f(opt.GetValue(), acc)
+
+		err = iter.Next(ctx)
+		if err != nil {
+			return acc, fmt.Errorf("fold failed: elem %v: %w", i, err)
+		}
 	}
 	iter.Close()
 	return acc, nil
 }
 
 // SeekKeyPrefix steps through an iterator until the current key is lexographically smaller than prefix.
-// If some error was found while seeking, return an error of type *SeekError.
+// Aggregates errors found in iteration and returns a *IterationError if any errors are found.
 // Note: Modifies the given iterator
 func SeekKeyPrefix[T any](ctx context.Context, iter Iterator[T], prefix []byte) (found bool, err error) {
-	var errs []IterationError
+	var errs []IterItemError
 	found = false
 	for {
-		err := iter.Next(ctx)
 		if iter.Finished() {
 			break
 		}
 
 		key := iter.CurrentKey()
-		if err != nil {
-			errs = append(errs, IterationError{
-				Key: key,
-				Err: err,
-			})
-		}
-
 		if bytes.HasPrefix(key, prefix) {
 			found = true
 			break
@@ -114,44 +103,59 @@ func SeekKeyPrefix[T any](ctx context.Context, iter Iterator[T], prefix []byte) 
 			found = false
 			break
 		}
+
+		err := iter.Next(ctx)
+		if err != nil {
+			errs = append(errs, IterItemError{
+				Key: key,
+				Err: err,
+			})
+		}
 	}
 
 	if len(errs) > 0 {
-		return found, &SeekError{
-			Errors: errs,
-		}
+		return found, &IterationError{Errors: errs}
 	}
 	return found, nil
 }
 
-func ConsumeKeys[T any](ctx context.Context, iter Iterator[T]) [][]byte {
-	var keys [][]byte
-	for {
-		iter.Next(ctx)
-		if iter.Finished() {
-			break
-		}
-		keys = append(keys, iter.CurrentKey())
-	}
-	return keys
-}
-
-func ConsumePairs[T any](ctx context.Context, iter Iterator[T]) []Pair[T] {
+func ConsumePairs[T any](ctx context.Context, iter Iterator[T]) ([]Pair[T], error) {
 	var pairs []Pair[T]
+	var errs []IterItemError
 	for {
-		err := iter.Next(ctx)
 		if iter.Finished() {
 			break
 		}
+
+		opt, err := iter.Value()
 		if err != nil {
-			continue
+			errs = append(errs, IterItemError{
+				Key: iter.CurrentKey(),
+				Err: err,
+			})
 		}
-		opt := iter.Value()
+		if opt.Empty() {
+			panic("opt empty")  TODO Fix this
+		}
+
 		pair := Pair[T]{
 			Key:   iter.CurrentKey(),
 			Value: opt.GetValue(),
 		}
 		pairs = append(pairs, pair)
+
+		err = iter.Next(ctx)
+		if err != nil {
+			errs = append(errs, IterItemError{
+				Key: iter.CurrentKey(),
+				Err: err,
+			})
+		}
 	}
-	return pairs
+
+	if len(errs) > 0 {
+		return pairs, &IterationError{Errors: errs}
+	}
+
+	return pairs, nil
 }

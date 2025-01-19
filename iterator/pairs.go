@@ -20,7 +20,7 @@ func IterFromPairs[T any](pairs []Pair[T]) Iterator[T] {
 
 	return &PairsIter[T]{
 		pairs: pairs,
-		idx:   ^uint64(0),
+		idx:   0,
 		done:  false,
 	}
 }
@@ -87,11 +87,11 @@ func (i *PairsIter[T]) Next(_ context.Context) error {
 	return nil
 }
 
-func (a *PairsIter[T]) Value() types.Option[T] {
+func (a *PairsIter[T]) Value() (types.Option[T], error) {
 	if a.done {
-		return types.None[T]()
+		return types.None[T](), nil
 	}
-	return types.Some(a.pairs[a.idx].Value)
+	return types.Some(a.pairs[a.idx].Value), nil
 }
 
 func (a *PairsIter[T]) Finished() bool {

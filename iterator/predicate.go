@@ -18,40 +18,47 @@ func Filter[T any](iter Iterator[T], predicate Predicate[T]) Iterator[T] {
 	}
 }
 
-// While returns an iterator of items for as long as predicte is valid
-func While[T any](iter Iterator[T], predicate Predicate[T]) Iterator[T] {
-	return &whileIterator[T]{
-		inner:     iter,
-		predicate: predicate,
-		done:      false,
-	}
-}
-
 type filterIterator[T any] struct {
-	inner         Iterator[T]
-	predicate     Predicate[T]
-	stopOnFailure bool
-	value         types.Option[T]
+	inner     Iterator[T]
+	predicate Predicate[T]
+	value     types.Option[T]
+	finished  bool
 }
 
 func (i *filterIterator[T]) Next(ctx context.Context) error {
 	for {
-		err := i.inner.Next(ctx)
+		if i.inner.Finished() {
+			i.finished = true
+			i.value = types.None[T]()
+			return nil
+		}
+
+		opt, err := i.inner.Value()
 		if err != nil {
+			i.value = types.None[T]()
 			return err
 		}
-		opt := i.inner.Value()
-		if opt.Empty() {
+
+		if !opt.Empty() {
+			// if iterator has no value
+			// skip since we are interested on things that match
+			// the predicate
+			continue
+		}
+
+		if i.predicate(opt.GetValue()) {
+			i.value = types.Some(opt.GetValue())
 			return nil
 		}
-		if i.predicate(opt.GetValue()) {
-			return nil
+		err = i.inner.Next(ctx)
+		if err != nil {
+			return err
 		}
 	}
 }
 
-func (i *filterIterator[T]) Value() types.Option[T] {
-	return i.inner.Value()
+func (i *filterIterator[T]) Value() (types.Option[T], error) {
+	return i.value, nil
 }
 
 func (i *filterIterator[T]) Finished() bool {
@@ -63,52 +70,5 @@ func (i *filterIterator[T]) Close() error {
 }
 
 func (i *filterIterator[T]) CurrentKey() []byte {
-	return i.CurrentKey()
-}
-
-type whileIterator[T any] struct {
-	inner     Iterator[T]
-	predicate Predicate[T]
-	done      bool
-}
-
-func (i *whileIterator[T]) Next(ctx context.Context) error {
-	for {
-		err := i.inner.Next(ctx)
-		if err != nil {
-			return err
-		}
-		opt := i.inner.Value()
-		if opt.Empty() {
-			return nil
-		}
-		if i.predicate(opt.GetValue()) {
-			return nil
-		} else {
-			i.done = true
-			return nil
-		}
-	}
-}
-
-func (i *whileIterator[T]) Value() types.Option[T] {
-	if i.done {
-		return types.None[T]()
-	}
-	return i.inner.Value()
-}
-
-func (i *whileIterator[T]) Finished() bool {
-	return i.done || i.inner.Finished()
-}
-
-func (i *whileIterator[T]) Close() error {
-	return i.inner.Close()
-}
-
-func (i *whileIterator[T]) CurrentKey() []byte {
-	if i.done {
-		return nil
-	}
 	return i.CurrentKey()
 }

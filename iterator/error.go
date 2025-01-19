@@ -2,18 +2,18 @@ package iterator
 
 import "strings"
 
-// IterationError models an IterationError which happened at a given key
-type IterationError struct {
+// IterItemError models an IterItemError which happened at a given key
+type IterItemError struct {
 	Key []byte
 	Err error
 }
 
-// SeekError bundles IterationErrors
-type SeekError struct {
-	Errors []IterationError
+// IterationError bundles IterItemError
+type IterationError struct {
+	Errors []IterItemError
 }
 
-func (e *SeekError) Error() string {
+func (e *IterationError) Error() string {
 	builder := strings.Builder{}
 	for _, err := range e.Errors {
 		builder.WriteString("key ")
