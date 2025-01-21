@@ -37,13 +37,13 @@ func Test_MapFailableIter_AppliesMap(t *testing.T) {
 	ctx := context.TODO()
 
 	for i := 0; !iter.Finished(); i++ {
-		opt, err := iter.Value()
+		val, err := iter.Value()
 		if i%2 == 0 {
 			require.Error(t, err, "index %v", i)
-			require.True(t, opt.Empty())
+			require.Equal(t, 0, val)
 		} else {
 			require.NoError(t, err)
-			require.Equal(t, i, opt.GetValue())
+			require.Equal(t, i, val)
 		}
 
 		err = iter.Next(ctx)

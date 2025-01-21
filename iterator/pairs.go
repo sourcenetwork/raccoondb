@@ -5,18 +5,20 @@ import (
 	"context"
 
 	"github.com/sourcenetwork/raccoondb/v2/marshal"
-	"github.com/sourcenetwork/raccoondb/v2/types"
 	"github.com/sourcenetwork/raccoondb/v2/utils"
 )
 
 var _ Iterator[any] = (*PairsIter[any])(nil)
 
 // IterFromPairs returns an iterator which sorts paris then yields it sequentially
-func IterFromPairs[T any](pairs []Pair[T]) Iterator[T] {
-	sortable := utils.FromComparator(pairs, func(left, right Pair[T]) bool {
+func IterFromPairs[T any](pairs []KeyValue[T]) Iterator[T] {
+	sortable := utils.FromComparator(pairs, func(left, right KeyValue[T]) bool {
 		return bytes.Compare(left.Key, right.Key) == -1
 	})
 	sortable.SortInPlace()
+	if len(pairs) == 0 {
+		return NewEmptyIterator[T]()
+	}
 
 	return &PairsIter[T]{
 		pairs: pairs,
@@ -28,9 +30,9 @@ func IterFromPairs[T any](pairs []Pair[T]) Iterator[T] {
 // IterFromStringKeyMap returns an Iterator which steps through the pairs in the items map.
 // The map keys are converted to bytes and ordered lexographically accodring to the bytes package.
 func IterFromStringKeyMap[T any](items map[string]T) Iterator[T] {
-	pairs := make([]Pair[T], 0, len(items))
+	pairs := make([]KeyValue[T], 0, len(items))
 	for key, value := range items {
-		pair := Pair[T]{
+		pair := KeyValue[T]{
 			Key:   []byte(key),
 			Value: value,
 		}
@@ -42,9 +44,9 @@ func IterFromStringKeyMap[T any](items map[string]T) Iterator[T] {
 // IterFromslice returns an iterator which yields the values in items
 // The iterator keys are the big endian encoding of the item's index in items
 func IterFromSlice[T any](items []T) Iterator[T] {
-	pairs := make([]Pair[T], 0, len(items))
+	pairs := make([]KeyValue[T], 0, len(items))
 	for i, item := range items {
-		pair := Pair[T]{
+		pair := KeyValue[T]{
 			Key:   marshal.EncodeUInt(uint64(i)),
 			Value: item,
 		}
@@ -53,24 +55,19 @@ func IterFromSlice[T any](items []T) Iterator[T] {
 	return IterFromPairs(pairs)
 }
 
-func NewPair[T any](key []byte, val T) Pair[T] {
-	return Pair[T]{
+func NewPair[T any](key []byte, val T) KeyValue[T] {
+	return KeyValue[T]{
 		Key:   key,
 		Value: val,
 	}
 }
 
-// Pair models a key value pair
-type Pair[T any] struct {
-	Key   []byte
-	Value T
-}
-
 // PairIter represents an iterator which steps through a list of pairs
 type PairsIter[T any] struct {
-	pairs []Pair[T]
+	pairs []KeyValue[T]
 	idx   uint64
 	done  bool
+	zero  T
 }
 
 func (i *PairsIter[T]) Next(_ context.Context) error {
@@ -87,11 +84,11 @@ func (i *PairsIter[T]) Next(_ context.Context) error {
 	return nil
 }
 
-func (a *PairsIter[T]) Value() (types.Option[T], error) {
+func (a *PairsIter[T]) Value() (T, error) {
 	if a.done {
-		return types.None[T](), nil
+		return a.zero, nil
 	}
-	return types.Some(a.pairs[a.idx].Value), nil
+	return a.pairs[a.idx].Value, nil
 }
 
 func (a *PairsIter[T]) Finished() bool {

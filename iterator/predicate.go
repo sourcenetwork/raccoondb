@@ -2,8 +2,6 @@ package iterator
 
 import (
 	"context"
-
-	"github.com/sourcenetwork/raccoondb/v2/types"
 )
 
 var _ Iterator[any] = (*filterIterator[any])(nil)
@@ -21,33 +19,27 @@ func Filter[T any](iter Iterator[T], predicate Predicate[T]) Iterator[T] {
 type filterIterator[T any] struct {
 	inner     Iterator[T]
 	predicate Predicate[T]
-	value     types.Option[T]
+	value     T
 	finished  bool
 }
 
 func (i *filterIterator[T]) Next(ctx context.Context) error {
+	var zero T
 	for {
 		if i.inner.Finished() {
 			i.finished = true
-			i.value = types.None[T]()
+			i.value = zero
 			return nil
 		}
 
-		opt, err := i.inner.Value()
+		val, err := i.inner.Value()
 		if err != nil {
-			i.value = types.None[T]()
+			i.value = zero
 			return err
 		}
 
-		if !opt.Empty() {
-			// if iterator has no value
-			// skip since we are interested on things that match
-			// the predicate
-			continue
-		}
-
-		if i.predicate(opt.GetValue()) {
-			i.value = types.Some(opt.GetValue())
+		if i.predicate(val) {
+			i.value = val
 			return nil
 		}
 		err = i.inner.Next(ctx)
@@ -57,7 +49,7 @@ func (i *filterIterator[T]) Next(ctx context.Context) error {
 	}
 }
 
-func (i *filterIterator[T]) Value() (types.Option[T], error) {
+func (i *filterIterator[T]) Value() (T, error) {
 	return i.value, nil
 }
 

@@ -6,7 +6,6 @@ import (
 	cmdb "github.com/cometbft/cometbft-db"
 
 	"github.com/sourcenetwork/raccoondb/v2/store"
-	"github.com/sourcenetwork/raccoondb/v2/types"
 )
 
 var _ store.StoreIterator[[]byte] = (*iterWrapper)(nil)
@@ -25,6 +24,13 @@ type iterWrapper struct {
 }
 
 func (i *iterWrapper) Next(ctx context.Context) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+		break
+	}
+
 	if i.finished {
 		return nil
 	}
@@ -42,11 +48,11 @@ func (i *iterWrapper) Next(ctx context.Context) error {
 	return nil
 }
 
-func (i *iterWrapper) Value() (types.Option[[]byte], error) {
+func (i *iterWrapper) Value() ([]byte, error) {
 	if i.finished {
-		return types.None[[]byte](), nil
+		return nil, nil
 	}
-	return types.Some(i.i.Value()), nil
+	return i.i.Value(), nil
 }
 
 func (i *iterWrapper) Finished() bool {

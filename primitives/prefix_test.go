@@ -53,8 +53,6 @@ func Test_PrefixKV_BaseStoreWithElementsAfterPrefixAreNotIncludedInIterator(t *t
 	require.NoError(t, err)
 
 	// then only the entry for testKey is returned
-	err = iter.Next(ctx)
-	require.NoError(t, err)
 	require.Equal(t, testKey, iter.CurrentKey())
 
 	err = iter.Next(ctx)

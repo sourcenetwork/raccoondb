@@ -175,7 +175,7 @@ func (s *FieldIndexStore) Iterate(ctx context.Context, param store.IterationPara
 
 // Wipe deletes all entries in store
 func (s *FieldIndexStore) Wipe(ctx context.Context) error {
-	err := store.DeleteAll(ctx, s.idx)
+	_, err := store.DeleteAll(ctx, s.idx, store.DefaultBatch)
 	if err != nil {
 		return newFieldIndexErr("Wipe", "", err)
 	}

@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/sourcenetwork/raccoondb/v2/iterator"
-	"github.com/sourcenetwork/raccoondb/v2/types"
 )
 
 var _ StoreIterator[any] = (*iterAdapter[any])(nil)
@@ -27,7 +26,7 @@ func (i *iterAdapter[T]) Next(ctx context.Context) error {
 	return i.iter.Next(ctx)
 }
 
-func (i *iterAdapter[T]) Value() (types.Option[T], error) {
+func (i *iterAdapter[T]) Value() (T, error) {
 	return i.iter.Value()
 }
 

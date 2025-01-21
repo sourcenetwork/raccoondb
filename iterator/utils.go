@@ -3,39 +3,17 @@ package iterator
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 )
 
-// Consume consumes the iterator and accumulates its items onto a slice.
+// Consume consumes the iterator and accumulates its items into a slice.
 // Note: Closes the iterator
 func Consume[T any](ctx context.Context, iter Iterator[T]) ([]T, error) {
-	var errs []error
-	var items []T
-	for !iter.Finished() {
-		opt, err := iter.Value()
-		if err != nil {
-			errs = append(errs, err)
-			continue
-		}
-		if !opt.Empty() {
-			items = append(items, opt.GetValue())
-		}
-
-		err = iter.Next(ctx)
-		if err != nil {
-			errs = append(errs, err)
-			continue
-		}
+	var vals []T
+	foldingFunc := func(kv KeyValue[T], acc []T) []T {
+		return append(acc, kv.Value)
 	}
-	err := iter.Close()
-	if err != nil {
-		errs = append(errs, err)
-	}
-	if len(errs) > 0 {
-		return items, errors.Join(errs...)
-	}
-	return items, nil
+	return Fold(ctx, iter, vals, foldingFunc)
 }
 
 // IndexedValue is a pair indicating the Value and the Idx that produced the element
@@ -60,24 +38,29 @@ func Enumerate[T any](iter Iterator[T]) Iterator[IndexedValue[T]] {
 }
 
 // FoldingFunc takes a value and an accumulator and returns an updated accumulator
-type FoldingFunc[T, Acc any] func(T, Acc) Acc
+type FoldingFunc[T, Acc any] func(KeyValue[T], Acc) Acc
 
 // Fold consumes the iterator by applying the folding function to all elements using
 // acc as the initial value to the folding function.
+// Iterates until completion or until the first error
 func Fold[T, Acc any](ctx context.Context, iter Iterator[T], acc Acc, f FoldingFunc[T, Acc]) (Acc, error) {
-	for i := 0; iter.Finished(); i++ {
-		opt, err := iter.Value()
+	defer iter.Close()
+	for !iter.Finished() {
+		val, err := iter.Value()
 		if err != nil {
-			return acc, fmt.Errorf("fold failed: elem %v: %w", i, err)
+			return acc, fmt.Errorf("fold failed: key %v: %w", iter.CurrentKey(), err)
 		}
-		acc = f(opt.GetValue(), acc)
+		kv := KeyValue[T]{
+			Key:   iter.CurrentKey(),
+			Value: val,
+		}
+		acc = f(kv, acc)
 
 		err = iter.Next(ctx)
 		if err != nil {
-			return acc, fmt.Errorf("fold failed: elem %v: %w", i, err)
+			return acc, fmt.Errorf("fold failed: elem %v: %w", iter.CurrentKey(), err)
 		}
 	}
-	iter.Close()
 	return acc, nil
 }
 
@@ -119,43 +102,22 @@ func SeekKeyPrefix[T any](ctx context.Context, iter Iterator[T], prefix []byte) 
 	return found, nil
 }
 
-func ConsumePairs[T any](ctx context.Context, iter Iterator[T]) ([]Pair[T], error) {
-	var pairs []Pair[T]
-	var errs []IterItemError
-	for {
-		if iter.Finished() {
-			break
-		}
-
-		opt, err := iter.Value()
-		if err != nil {
-			errs = append(errs, IterItemError{
-				Key: iter.CurrentKey(),
-				Err: err,
-			})
-		}
-		if opt.Empty() {
-			panic("opt empty")  TODO Fix this
-		}
-
-		pair := Pair[T]{
-			Key:   iter.CurrentKey(),
-			Value: opt.GetValue(),
-		}
-		pairs = append(pairs, pair)
-
-		err = iter.Next(ctx)
-		if err != nil {
-			errs = append(errs, IterItemError{
-				Key: iter.CurrentKey(),
-				Err: err,
-			})
-		}
+// ConsumePairs steps through the iterator and returns all key-value pairs contained in it.
+// Stops at the first error
+func ConsumePairs[T any](ctx context.Context, iter Iterator[T]) ([]KeyValue[T], error) {
+	var pairs []KeyValue[T]
+	foldingFunc := func(kv KeyValue[T], acc []KeyValue[T]) []KeyValue[T] {
+		return append(acc, kv)
 	}
+	return Fold(ctx, iter, pairs, foldingFunc)
+}
 
-	if len(errs) > 0 {
-		return pairs, &IterationError{Errors: errs}
+// ConsumeKeys steps through the iterator and returns all keys contained in it.
+// Stops at the first error
+func ConsumeKeys[T any](ctx context.Context, iter Iterator[T]) ([][]byte, error) {
+	var pairs [][]byte
+	foldingFunc := func(kv KeyValue[T], acc [][]byte) [][]byte {
+		return append(acc, kv.Key)
 	}
-
-	return pairs, nil
+	return Fold(ctx, iter, pairs, foldingFunc)
 }

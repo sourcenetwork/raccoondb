@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/sourcenetwork/raccoondb/v2/errors"
-	"github.com/sourcenetwork/raccoondb/v2/types"
 )
 
 var _ Iterator[any] = (*mapIter[any, any])(nil)
@@ -47,28 +46,25 @@ type mapIter[T, U any] struct {
 	inner  Iterator[T]
 	mapper FailableMapper[T, U]
 	mapErr error
+	zero   U
 }
 
 func (i *mapIter[T, U]) Next(ctx context.Context) error {
 	return i.inner.Next(ctx)
 }
 
-func (i *mapIter[T, U]) Value() (types.Option[U], error) {
-	opt, err := i.inner.Value()
+func (i *mapIter[T, U]) Value() (U, error) {
+	t, err := i.inner.Value()
 	if err != nil {
-		return types.None[U](), err
-	}
-	if opt.Empty() {
-		return types.None[U](), nil
+		return i.zero, err
 	}
 
-	val := opt.GetValue()
-	u, err := i.mapper(val)
+	u, err := i.mapper(t)
 	if err != nil {
-		return types.None[U](), fmt.Errorf("%w: %w", ErrMapper, err)
+		return i.zero, fmt.Errorf("%w: %w", ErrMapper, err)
 	}
 
-	return types.Some(u), nil
+	return u, nil
 }
 
 func (i *mapIter[T, U]) Finished() bool {

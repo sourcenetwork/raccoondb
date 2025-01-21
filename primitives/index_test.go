@@ -31,7 +31,7 @@ func Test_FieldIndexStore_ValuesInBucket_CanIter(t *testing.T) {
 
 	pairs, err := iterator.ConsumePairs(ctx, iter)
 	require.NoError(t, err)
-	want := []iterator.Pair[[]byte]{
+	want := []iterator.KeyValue[[]byte]{
 		iterator.NewPair([]byte("v1"), []byte("v1")),
 		iterator.NewPair([]byte("v2"), []byte("v2")),
 	}

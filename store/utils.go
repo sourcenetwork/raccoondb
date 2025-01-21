@@ -6,40 +6,6 @@ import (
 	"github.com/sourcenetwork/raccoondb/v2/iterator"
 )
 
-const batchSize uint = 100
-
-// DeleteAll iterates over kv and deletes all records.
-func DeleteAll(ctx context.Context, kv KVStore) error {
-	// FIXME this isn't working, need to make it a batch
-
-	// create it, batchSize keys to memory
-	// delete
-	// repeat until take / consume yiels no items
-	//
-	// load
-	iter, err := kv.Iterate(ctx, NewOpenIterator())
-	if err != nil {
-		return err
-	}
-
-	for {
-		err := iter.Next(ctx)
-		if err != nil {
-			return err
-		}
-		if iter.Finished() {
-			break
-		}
-
-		_, err = kv.Delete(ctx, iter.CurrentKey())
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 // IteratePrefix does a prefix Iteration on a Iterable store.
 //
 // IteratePrefix is a more performant option to doing prefix iteration, as opposed to an iterator.PrefixIterator,
@@ -60,7 +26,7 @@ func IteratePrefix[T any](ctx context.Context, iterable Iterable[T], prefix []by
 	if err != nil {
 		return nil, err
 	}
-	return iterator.NewPrefixIterator(prefix, iter, stripPrefix), nil
+	return iterator.NewPrefixIterator(ctx, prefix, iter, stripPrefix)
 }
 
 // ConcatKey returns a slice which contains the concatination of prefix with key

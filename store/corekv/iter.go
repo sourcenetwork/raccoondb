@@ -5,7 +5,6 @@ import (
 
 	"github.com/sourcenetwork/corekv"
 	"github.com/sourcenetwork/raccoondb/v2/store"
-	"github.com/sourcenetwork/raccoondb/v2/types"
 )
 
 var _ (store.StoreIterator[[]byte]) = (*iterAdapter)(nil)
@@ -17,7 +16,14 @@ type iterAdapter struct {
 	finished bool
 }
 
-func (i *iterAdapter) Next(_ context.Context) error {
+func (i *iterAdapter) Next(ctx context.Context) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+		break
+	}
+
 	i.iter.Next()
 	if !i.iter.Valid() {
 		i.finished = true
@@ -25,20 +31,17 @@ func (i *iterAdapter) Next(_ context.Context) error {
 	return nil
 }
 
-func (i *iterAdapter) Value() (types.Option[[]byte], error) {
+func (i *iterAdapter) Value() ([]byte, error) {
 	if i.finished {
-		return types.None[[]byte](), nil
+		return nil, nil
 	}
 
 	bytes, err := i.iter.Value()
 	if err != nil {
-		return types.None[[]byte](), err
+		return nil, err
 	}
 
-	if bytes == nil {
-		return types.None[[]byte](), nil
-	}
-	return types.Some(bytes), nil
+	return bytes, nil
 }
 
 func (i *iterAdapter) Finished() bool {

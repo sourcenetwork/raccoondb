@@ -164,23 +164,21 @@ func test_Iterate_ReturnsIteratorOverAllItems(t *testing.T, kv store.KVStore) {
 	require.NoError(t, err)
 
 	for i := 0; !iter.Finished(); i++ {
-		opt, err := iter.Value()
+		val, err := iter.Value()
 		require.NoError(t, err)
-		t.Logf("opt %v: %v", i, opt)
-		require.False(t, opt.Empty())
 
 		want := testData[i]
 		require.Equal(t, want, string(iter.CurrentKey()))
-		require.Equal(t, want, string(opt.GetValue()))
+		require.Equal(t, want, string(val))
 
 		err = iter.Next(ctx)
 		require.NoError(t, err)
 	}
 
 	require.Nil(t, iter.CurrentKey())
-	opt, err := iter.Value()
+	val, err := iter.Value()
 	require.NoError(t, err)
-	require.True(t, opt.Empty())
+	require.Nil(t, val)
 
 	err = iter.Close()
 	require.NoError(t, err)

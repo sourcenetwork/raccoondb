@@ -14,12 +14,12 @@ func Test_Prefix_WhithoutPrefix_ReturnsNoItems(t *testing.T) {
 		"test": "test",
 	}
 	iter := IterFromStringKeyMap(items)
-	iter = NewPrefixIterator([]byte("_"), iter, false)
+	iter, err := NewPrefixIterator(context.TODO(), []byte("_"), iter, false)
+	require.NoError(t, err)
 
 	vals, errs := Consume(context.TODO(), iter)
-
 	require.NoError(t, errs)
-	require.Empty(t, vals)
+	require.Len(t, vals, 0)
 }
 
 func Test_Prefix_WithPrefixedItems_ReturnItemsUntilEnd(t *testing.T) {
@@ -29,7 +29,8 @@ func Test_Prefix_WithPrefixedItems_ReturnItemsUntilEnd(t *testing.T) {
 		"_test": "test",
 	}
 	iter := IterFromStringKeyMap(items)
-	iter = NewPrefixIterator([]byte("_"), iter, false)
+	iter, err := NewPrefixIterator(context.TODO(), []byte("_"), iter, false)
+	require.NoError(t, err)
 
 	vals, err := Consume(context.TODO(), iter)
 
@@ -42,22 +43,19 @@ func Test_Prefix_WithPrefixedItems_ReturnItemsUntilEnd(t *testing.T) {
 	require.Equal(t, want, vals)
 }
 
-func Test_Prefix_WithItemsBeforePrefix_NextSkipsThatDoNotContainPrefix(t *testing.T) {
+func Test_Prefix_WithItemsBeforePrefix_IterIsCreatedAfterItemsThatDoNotContainPrefix(t *testing.T) {
 	items := map[string]string{
 		"001": "001",
 		"111": "111",
 		"112": "112",
 	}
 	iter := IterFromStringKeyMap(items)
-	iter = NewPrefixIterator([]byte("1"), iter, false)
-
-	err := iter.Next(context.TODO())
+	iter, err := NewPrefixIterator(context.TODO(), []byte("1"), iter, false)
 	require.NoError(t, err)
 
-	opt, err := iter.Value()
+	val, err := iter.Value()
 	require.NoError(t, err)
-	require.False(t, opt.Empty())
-	require.Equal(t, "111", opt.GetValue())
+	require.Equal(t, "111", val)
 }
 
 func Test_Prefix_WithItemsAfterPrefix_ReturnsNoItemsWithoutPrefix(t *testing.T) {
@@ -69,7 +67,8 @@ func Test_Prefix_WithItemsAfterPrefix_ReturnsNoItemsWithoutPrefix(t *testing.T) 
 		"333": "333",
 	}
 	iter := IterFromStringKeyMap(items)
-	iter = NewPrefixIterator([]byte("1"), iter, false)
+	iter, err := NewPrefixIterator(context.TODO(), []byte("1"), iter, false)
+	require.NoError(t, err)
 
 	vals, errs := Consume(context.TODO(), iter)
 	require.Empty(t, errs)

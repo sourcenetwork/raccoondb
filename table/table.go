@@ -139,7 +139,7 @@ func (s *Table[T]) Has(ctx context.Context, key []byte) (bool, error) {
 // and reinserts it using the latest state of stored objects
 func (s *Table[T]) UpateIndexes(ctx context.Context) error {
 	for _, idx := range s.indexes {
-		err := idx.Drop(ctx)
+		err := idx.Wipe(ctx)
 		if err != nil {
 			return newTableErr("UpdateIndexes", "wiping indexes", err)
 		}
@@ -150,21 +150,13 @@ func (s *Table[T]) UpateIndexes(ctx context.Context) error {
 		return newTableErr("UpdateIndexes", "creating iterator", err)
 	}
 
-	for {
-		err := iter.Next(ctx)
+	for !iter.Finished() {
+		val, err := iter.Value()
 		if err != nil {
 			return newTableErr("UpdateIndexes", "iterating over objects", err)
 		}
-		if iter.Finished() {
-			break
-		}
-		opt, err := iter.Value()
-		if err != nil {
-			return newTableErr("UpdateIndexes", "iterating over objects", err)
-		}
-		obj := opt.GetValue()
 		for _, idx := range s.indexes {
-			_, err := idx.IndexObject(ctx, iter.CurrentKey(), &obj)
+			_, err := idx.IndexObject(ctx, iter.CurrentKey(), &val)
 			if err != nil {
 				return newTableErr("UpdateIndexes", "setting index", err)
 			}
