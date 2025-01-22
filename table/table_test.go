@@ -7,15 +7,15 @@ import (
 	"github.com/sourcenetwork/raccoondb/v2/iterator"
 	"github.com/sourcenetwork/raccoondb/v2/marshal"
 	"github.com/sourcenetwork/raccoondb/v2/store"
-	"github.com/sourcenetwork/raccoondb/v2/store/cometbft"
 	"github.com/sourcenetwork/raccoondb/v2/store/test"
+	testutil "github.com/sourcenetwork/raccoondb/v2/test"
 	"github.com/stretchr/testify/require"
 )
 
 var testKey []byte = []byte("test")
 
 func setup(t *testing.T) (context.Context, *Table[Record], IndexReader[Record, string]) {
-	kv := cometbft.NewMemKV()
+	kv := testutil.NewTestKV()
 
 	factory := func() Record { return Record{} }
 	table := NewTable(kv, marshal.NewJSONMarshaler(factory))
@@ -37,7 +37,7 @@ type Record struct {
 func Test_Table_Suite(t *testing.T) {
 	factory := func() store.KVStore {
 		m := marshal.BytesMarshaler{}
-		kv := cometbft.NewMemKV()
+		kv := testutil.NewTestKV()
 		t := NewTable(kv, m)
 		return t
 	}
@@ -158,7 +158,7 @@ func Test_Table_UpdatingRecord_RecordMovesBuckets(t *testing.T) {
 func Test_Table_AddingIndexThenUpdating_BuildsIndexes(t *testing.T) {
 	t.Skip()
 	// Given table with record 1 and 2
-	kv := cometbft.NewMemKV()
+	kv := testutil.NewTestKV()
 	factory := func() Record { return Record{} }
 	table := NewTable(kv, marshal.NewJSONMarshaler(factory))
 	ctx := context.TODO()

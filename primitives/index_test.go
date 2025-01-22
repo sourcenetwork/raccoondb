@@ -6,8 +6,8 @@ import (
 
 	"github.com/sourcenetwork/raccoondb/v2/iterator"
 	"github.com/sourcenetwork/raccoondb/v2/store"
-	"github.com/sourcenetwork/raccoondb/v2/store/cometbft"
 	"github.com/sourcenetwork/raccoondb/v2/store/test"
+	testutil "github.com/sourcenetwork/raccoondb/v2/test"
 	"github.com/stretchr/testify/require"
 )
 
@@ -15,7 +15,7 @@ var testBucket []byte = []byte("bucket")
 
 func Test_FieldIndexStore_ValuesInBucket_CanIter(t *testing.T) {
 	ctx := context.TODO()
-	kv := cometbft.NewMemKV()
+	kv := testutil.NewTestKV()
 	idx := NewFieldIndexStore(kv)
 
 	created, err := idx.IndexValue(ctx, testBucket, []byte("v1"))
@@ -40,7 +40,7 @@ func Test_FieldIndexStore_ValuesInBucket_CanIter(t *testing.T) {
 
 func Test_FieldIndexStore_GetBucketCount_ReturnsCount(t *testing.T) {
 	ctx := context.TODO()
-	kv := cometbft.NewMemKV()
+	kv := testutil.NewTestKV()
 	idx := NewFieldIndexStore(kv)
 
 	created, err := idx.IndexValue(ctx, []byte("b1"), []byte("v1"))
@@ -58,7 +58,7 @@ func Test_FieldIndexStore_GetBucketCount_ReturnsCount(t *testing.T) {
 
 func Test_FieldIndexStore_RemovingLastItemFromBucket_DeletesAndDecrementBucket(t *testing.T) {
 	ctx := context.TODO()
-	kv := cometbft.NewMemKV()
+	kv := testutil.NewTestKV()
 	idx := NewFieldIndexStore(kv)
 
 	created, err := idx.IndexValue(ctx, []byte("b1"), []byte("v1"))

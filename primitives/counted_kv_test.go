@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/sourcenetwork/raccoondb/v2/store"
-	"github.com/sourcenetwork/raccoondb/v2/store/corekv"
 	"github.com/sourcenetwork/raccoondb/v2/store/test"
+	testutil "github.com/sourcenetwork/raccoondb/v2/test"
 	"github.com/stretchr/testify/require"
 )
 
@@ -14,7 +14,7 @@ var testKey = []byte("key")
 var testVal = []byte("value")
 
 func Test_CountedKV_StartsAtZero(t *testing.T) {
-	kv := corekv.NewMemKV()
+	kv := testutil.NewTestKV()
 	ctx := context.TODO()
 	ckv := NewCountedKVStore(kv)
 
@@ -24,7 +24,7 @@ func Test_CountedKV_StartsAtZero(t *testing.T) {
 }
 
 func Test_CountedKV_IncrementsWhenRecordIsSet(t *testing.T) {
-	kv := corekv.NewMemKV()
+	kv := testutil.NewTestKV()
 	ctx := context.TODO()
 	ckv := NewCountedKVStore(kv)
 
@@ -37,7 +37,7 @@ func Test_CountedKV_IncrementsWhenRecordIsSet(t *testing.T) {
 }
 
 func Test_CountedKV_DecrementsAfterRecordIsRemoved(t *testing.T) {
-	kv := corekv.NewMemKV()
+	kv := testutil.NewTestKV()
 	ctx := context.TODO()
 	ckv := NewCountedKVStore(kv)
 
@@ -54,7 +54,7 @@ func Test_CountedKV_DecrementsAfterRecordIsRemoved(t *testing.T) {
 
 func Test_CountedKV_Suite(t *testing.T) {
 	factory := func() store.KVStore {
-		kv := corekv.NewMemKV()
+		kv := testutil.NewTestKV()
 		ckv := NewCountedKVStore(kv)
 		return ckv
 	}

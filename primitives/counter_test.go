@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/sourcenetwork/raccoondb/v2/store/corekv"
+	"github.com/sourcenetwork/raccoondb/v2/test"
 	"github.com/stretchr/testify/require"
 )
 
@@ -12,7 +12,7 @@ var testCounter []byte = []byte("counter")
 
 func Test_CounterStore_GetSet(t *testing.T) {
 	ctx := context.TODO()
-	kv := corekv.NewMemKV()
+	kv := test.NewTestKV()
 	counter := NewCounterStore(kv)
 
 	val, err := counter.Get(ctx, testCounter)
@@ -30,7 +30,7 @@ func Test_CounterStore_GetSet(t *testing.T) {
 
 func Test_CounterStore_GetNext_ReturnsNextNumber(t *testing.T) {
 	ctx := context.TODO()
-	kv := corekv.NewMemKV()
+	kv := test.NewTestKV()
 	counter := NewCounterStore(kv)
 
 	_, err := counter.Increment(ctx, testCounter)
@@ -48,7 +48,7 @@ func Test_CounterStore_GetNext_ReturnsNextNumber(t *testing.T) {
 }
 func Test_CounterStore_GetNext_Returns1IfUninitialized(t *testing.T) {
 	ctx := context.TODO()
-	kv := corekv.NewMemKV()
+	kv := test.NewTestKV()
 	counter := NewCounterStore(kv)
 
 	val, err := counter.GetNext(ctx, testCounter)
@@ -58,7 +58,7 @@ func Test_CounterStore_GetNext_Returns1IfUninitialized(t *testing.T) {
 
 func Test_CounterStore_Get_Returns0IfUninitialized(t *testing.T) {
 	ctx := context.TODO()
-	kv := corekv.NewMemKV()
+	kv := test.NewTestKV()
 	counter := NewCounterStore(kv)
 
 	val, err := counter.Get(ctx, testCounter)
@@ -68,7 +68,7 @@ func Test_CounterStore_Get_Returns0IfUninitialized(t *testing.T) {
 
 func Test_CounterStore_GetSetMulti(t *testing.T) {
 	ctx := context.TODO()
-	kv := corekv.NewMemKV()
+	kv := test.NewTestKV()
 	counter := NewCounterStore(kv)
 
 	key2 := []byte("othercounter")
@@ -91,7 +91,7 @@ func Test_CounterStore_GetSetMulti(t *testing.T) {
 
 func Test_CounterStore_Has_FalseIfNotInit(t *testing.T) {
 	ctx := context.TODO()
-	kv := corekv.NewMemKV()
+	kv := test.NewTestKV()
 	counter := NewCounterStore(kv)
 
 	has, err := counter.Has(ctx, testCounter)
@@ -101,7 +101,7 @@ func Test_CounterStore_Has_FalseIfNotInit(t *testing.T) {
 
 func Test_CounterStore_Decrement_Reduces(t *testing.T) {
 	ctx := context.TODO()
-	kv := corekv.NewMemKV()
+	kv := test.NewTestKV()
 	counter := NewCounterStore(kv)
 
 	_, err := counter.Increment(ctx, testCounter)
@@ -120,7 +120,7 @@ func Test_CounterStore_Decrement_Reduces(t *testing.T) {
 
 func Test_CounterStore_DeleteCounter(t *testing.T) {
 	ctx := context.TODO()
-	kv := corekv.NewMemKV()
+	kv := test.NewTestKV()
 	counter := NewCounterStore(kv)
 
 	_, err := counter.Increment(ctx, testCounter)
