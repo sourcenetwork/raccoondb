@@ -12,6 +12,7 @@ var _ Marshaler[uint64] = UIntMarshaler{}
 var _ Marshaler[string] = StringMarshaler{}
 var _ Marshaler[[]byte] = BytesMarshaler{}
 var _ Marshaler[any] = JsonMarshaler[any]{}
+var _ Marshaler[bool] = BoolMarshaler{}
 
 type UIntMarshaler struct{}
 
@@ -87,6 +88,27 @@ func (m BytesMarshaler) Marshal(bytes *[]byte) ([]byte, error) {
 
 func (m BytesMarshaler) Unmarshal(bytes []byte) ([]byte, error) {
 	return bytes, nil
+}
+
+// BoolMarshaler implements Marshaler interface for byte slices
+// Acts as an identity function
+type BoolMarshaler struct{}
+
+func (m BoolMarshaler) Marshal(b *bool) ([]byte, error) {
+	if !*b {
+		return []byte{0x0}, nil
+	}
+	return []byte{0x1}, nil
+}
+
+func (m BoolMarshaler) Unmarshal(bytes []byte) (bool, error) {
+	if len(bytes) > 1 {
+		return false, errors.New("BoolMarshaler only accepts len 1 slices")
+	}
+	if bytes[0] == 0 {
+		return false, nil
+	}
+	return true, nil
 }
 
 // EncodeInt64 converts a int64 into a ones complement representation with a sign bit where 0 is negative and 1 is positive.

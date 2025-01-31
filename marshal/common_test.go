@@ -49,3 +49,15 @@ func Test_Int64_EncDec_Orderable(t *testing.T) {
 	}
 	require.Equal(t, want, sorted)
 }
+
+func Test_BoolMarshaler(t *testing.T) {
+	val := false
+
+	marshaler := BoolMarshaler{}
+	bytes, err := marshaler.Marshal(&val)
+	require.NoError(t, err)
+
+	valUnmarshaled, err := marshaler.Unmarshal(bytes)
+	require.NoError(t, err)
+	require.Equal(t, val, valUnmarshaled)
+}
