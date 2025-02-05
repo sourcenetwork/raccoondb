@@ -1,4 +1,4 @@
-module github.com/sourcenetwork/raccoondb/v2/store/cosmos
+module github.com/sourcenetwork/raccoondb/store/cosmos/v2
 
 go 1.23.5
 
