@@ -1,0 +1,55 @@
+name: Test Workflow
+
+on:
+  pull_request:
+    branches:
+      - dev
+
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+    branches:
+      - dev
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Go environment
+        uses: actions/setup-go@v5
+      
+      - name: Run test
+        run: make test
+  
+  test-js:
+    name: Test JS
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Go environment
+        uses: actions/setup-go@v5
+      
+      - name: Run test
+        run: make test:js
+
+  test-wasip1:
+    name: Test WASIP1
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Go environment
+        uses: actions/setup-go@v5
+
+      - name: Setup `wasmtime`
+        uses: bytecodealliance/actions/wasmtime/setup@v1
+      
+      - name: Run test
+        run: make test:wasip1
