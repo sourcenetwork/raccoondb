@@ -59,7 +59,9 @@ func (a *storeAdapter) Iterate(ctx context.Context, opt store.IterationParam) (s
 	}
 	iter := a.kv.Iterator(ctx, o)
 	return &iterAdapter{
-		iter: iter,
+		iter:     iter,
+		params:   opt,
+		finished: !iter.Valid(),
 	}, nil
 }
 

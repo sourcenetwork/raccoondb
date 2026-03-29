@@ -13,7 +13,7 @@ var _ store.StoreIterator[[]byte] = (*iterWrapper)(nil)
 func newWrappedIter(iter cmdb.Iterator) store.StoreIterator[[]byte] {
 	return &iterWrapper{
 		i:        iter,
-		finished: false,
+		finished: !iter.Valid(),
 	}
 }
 

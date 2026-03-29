@@ -44,6 +44,30 @@ func Test_Table_Suite(t *testing.T) {
 	test.RunSuite(t, factory)
 }
 
+func Test_Table_IterateEmptyTable_DoesNotPanic(t *testing.T) {
+	ctx, table, _ := setup(t)
+
+	// Iterating over an empty table should not panic
+	iter, err := table.Iterate(ctx, store.NewOpenIterator())
+	require.NoError(t, err)
+	defer iter.Close()
+
+	require.True(t, iter.Finished())
+	require.Nil(t, iter.CurrentKey())
+}
+
+func Test_Index_IterateEmptyBucket_DoesNotPanic(t *testing.T) {
+	ctx, _, idx := setup(t)
+
+	// Iterating over a non-existent bucket should not panic
+	bucket := "nonexistent"
+	iter, err := idx.IterateKeys(ctx, &bucket, store.NewOpenIterator())
+	require.NoError(t, err)
+	defer iter.Close()
+
+	require.True(t, iter.Finished())
+}
+
 func Test_Table_SettingObject_AddsItToIndex(t *testing.T) {
 	ctx, table, idx := setup(t)
 

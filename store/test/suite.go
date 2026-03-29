@@ -148,6 +148,25 @@ func test_Has_FalseWhenNotSet(t *testing.T, kv store.KVStore) {
 	require.NoError(t, err)
 }
 
+func test_Iterate_EmptyStore_DoesNotPanic(t *testing.T, kv store.KVStore) {
+	ctx := context.TODO()
+
+	iter, err := kv.Iterate(ctx, store.NewOpenIterator())
+	require.NoError(t, err)
+	defer iter.Close()
+
+	// Should be finished immediately on empty store
+	require.True(t, iter.Finished())
+
+	// CurrentKey should return nil, not panic
+	require.Nil(t, iter.CurrentKey())
+
+	// Value should return nil, not panic
+	val, err := iter.Value()
+	require.NoError(t, err)
+	require.Nil(t, val)
+}
+
 func test_Iterate_ReturnsIteratorOverAllItems(t *testing.T, kv store.KVStore) {
 	ctx := context.TODO()
 	testData := []string{
@@ -195,6 +214,7 @@ func RunSuite(t *testing.T, producer func() store.KVStore) {
 		test_HasNilKey_Errors,
 		test_Has_FalseWhenNotSet,
 		test_Has_TrueWhenSet,
+		test_Iterate_EmptyStore_DoesNotPanic,
 		test_Iterate_ReturnsIteratorOverAllItems,
 		test_SetNewValue_ReturnsCreatedTrue,
 		test_SetNilKey_Errors,

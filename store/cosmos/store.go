@@ -50,7 +50,7 @@ func (k *kvAdapter) Iterate(ctx context.Context, opt store.IterationParam) (stor
 
 	return &iterAdapter{
 		iter:     iter,
-		finished: false,
+		finished: !iter.Valid(),
 		params:   opt,
 	}, nil
 }
